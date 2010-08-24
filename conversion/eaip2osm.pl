@@ -1,15 +1,21 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use XML::Twig;
-use Data::Dumper;
 use Getopt::Long;
+unless (eval { require XML::Twig }) {
+	print STDERR "XML::Twig is not installed please install it\n";
+	if ( -e '/etc/debian_version' ) {
+		print STDERR "looks like you're running debian, so you can try\n  apt-get install libxml-twig-perl\n";
+	}	
+	exit 1;
+}
 
 binmode STDOUT, ":utf8";
-my ($aviation_area_type,$multiple_output);
+my ($aviation_area_type,$multiple_output,$helpmode);
 GetOptions(
 	"type=s"=>\$aviation_area_type,
 	"multi"=>\$multiple_output,
+	"help"=>\$helpmode,
 );
 
 $aviation_area_type = "danger" unless $aviation_area_type;
@@ -78,6 +84,18 @@ sub id2str {
 	my $id = shift;
 	return join('',map {ord($_) - ord '0'} split(//,$id));
 }
+
+if ($helpmode || !@ARGV) {
+	print "\nUsage: $0 [OPTIONS] FILE [FILE]...\n\n";
+	print "OPTIONS\n";
+	print " -type	specify aviation_area in output xmls (default: danger)\n";
+	print " -multi	save multiple .osm files instead of one big output to STDOUT (not working yet)\n";
+	print "--help	display this help and exit\n";
+	print "\n";
+	print "Check for latest version and report bugs at http://code.google.com/p/openaviationmap/\n\n";
+	exit 1;
+}
+
 
 die "no multiple output support yet ;)\n" if $multiple_output;
 
