@@ -1,0 +1,5 @@
+node,way   note             text         delete
+node,way   source           text         delete
+
+node,way   aviation_area    text         polygon
+
