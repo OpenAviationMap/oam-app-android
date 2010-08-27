@@ -54,7 +54,8 @@ sub parse_eaip_enr_row {
 			print qq!<node id="$i" lat="$lat" lon="$lon"/>\n!;
 			$c++;
 		}
-		print qq!<way id="$id" visible="true">\n!;
+		my $wayid = id2str($id);
+		print qq!<way id="$wayid" visible="true">\n!;
 		for (0..$c-1,0) {
 			my $i = id2str($id."_".$_);
 			print qq!\t<nd ref="$i"/>\n!;
