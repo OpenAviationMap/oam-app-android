@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6'>
+  <node id="-6" lat="47.934167" lon="18.831667"/>
+  <node id="-5" lat="47.883889" lon="18.765"/>
+  <node id="-4" lat="47.8675" lon="18.865"/>
+  <node id="-3" lat="47.884167" lon="18.931667"/>
+  <node id="-2" lat="47.934167" lon="18.898333"/>
+  <node id="-1" lat="47.934167" lon="18.831667"/>
+
+  <way id="-7" visible="true">
+    <nd ref="-1"/>
+    <nd ref="-2"/>
+    <nd ref="-3"/>
+    <nd ref="-4"/>
+    <nd ref="-5"/>
+    <nd ref="-6"/>
+    <nd ref="-1"/>
+    <tag k="name" v="LHD34"/>
+    <tag k="area" v="yes"/>
+    <tag k="aviation_area" v="danger"/>
+  </way>
+
+</osm>
