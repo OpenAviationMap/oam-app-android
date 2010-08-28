@@ -2,6 +2,8 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use Math::Trig;
+
 unless (eval { require XML::Twig }) {
 	print STDERR "XML::Twig is not installed please install it\n";
 	if ( -e '/etc/debian_version' ) {
@@ -40,13 +42,37 @@ sub parse_eaip_enr_row {
 	my ($id,$name) = $idname =~ m#<x:strong(?:[^>]*)>(\w+)\s+/\s+(\w+)</x:strong>#;
 	return unless defined $id;
 	my (undef,$polystr) = split(m#<x:br(?:[^>]*)>#,$idname,2);
+	if ($multiple_output) {
+		print qq!<?xml version='1.0' encoding='UTF-8'?>\n<osm version='0.6'>\n!;
+	}
 	if ($polystr=~ m/A circle/) {
 		#circle
+		my (undef,undef,undef,$radius,undef,undef,$lat,$lng) = split(' ','A circle radius 3.2KM entered on 463443N 0185110E');
+		$lat = dms2decimal($lat);
+		$lng = dms2decimal($lng);
+		($radius) = split('K',$radius);
+		my @pts = geocircle($lat,$lng,$radius);
+		my $c = 0;
+		for(@pts) {
+			my (@p) = $_;
+			my $lat = $p[0][0];
+			my $lon = $p[0][1];
+			my $i = id2str($id."_".$c);
+			print qq!<node id="$i" lat="$lat" lon="$lon"/>\n!;
+			$c++;
+		}
+		my $wayid = id2str($id);
+		print qq!<way id="$wayid" visible="true">\n!;
+		for (0..$c-1,0) {
+			my $i = id2str($id."_".$_);
+			print qq!\t<nd ref="$i"/>\n!;
+		}
+		print qq!	<tag k="name" v="$id"/>
+	<tag k="area" v="yes"/>
+	<tag k="aviation_area" v="$aviation_area_type"/>\n!;
+		print "</way>\n";
 	} else {
 		#poly
-		if ($multiple_output) {
-			print qq!<?xml version='1.0' encoding='UTF-8'?>\n<osm version='0.6'>\n!;
-		}
 		my $c = 0;
 		for my $pts (split(m/\s*-\s*/,$polystr)) {
 			my ($lat,$lon) = map {dms2decimal($_)} split(' ',$pts);
@@ -64,9 +90,9 @@ sub parse_eaip_enr_row {
 	<tag k="area" v="yes"/>
 	<tag k="aviation_area" v="$aviation_area_type"/>\n!;
 		print "</way>\n";
-		if ($multiple_output) {
-			print "</osm>\n";
-		}
+	}
+	if ($multiple_output) {
+		print "</osm>\n";
 	}
 }
 
@@ -85,6 +111,28 @@ sub id2str {
 	my $id = shift;
 	return join('',map {ord($_) - ord '0'} split(//,$id));
 }
+
+sub geocircle {
+	my ($lat,$lng,$radius) = @_;
+	my $R = 6371; # earth's mean radius in km
+	$lat = $lat * pi / 180;
+	$lng = $lng * pi / 180;
+	my $d = $radius / $R;
+	my @pts;
+	for (0..360) {
+		my @p;
+		my $x = $_;
+		my $brng = $x * pi / 180;
+		my $plat = asin(sin($lat)*cos($d) + cos($lat)*sin($d)*cos($brng));
+		my $plng = (($lng + atan2(sin($brng)*sin($d)*cos($lat), cos($d)-sin($lat)*sin($plat))) * 180) / pi;
+		$plat = ($plat * 180) / pi;
+		push(@pts,[$plat,$plng]);
+	}
+	return @pts;
+}
+
+
+
 
 if ($helpmode || !@ARGV) {
 	print "\nUsage: $0 [OPTIONS] FILE [FILE]...\n\n";
