@@ -47,7 +47,7 @@ sub parse_eaip_enr_row {
 	}
 	if ($polystr=~ m/A circle/) {
 		#circle
-		my (undef,undef,undef,$radius,undef,undef,$lat,$lng) = split(' ','A circle radius 3.2KM entered on 463443N 0185110E');
+		my (undef,undef,undef,$radius,undef,undef,$lat,$lng) = split(' ',$polystr);
 		$lat = dms2decimal($lat);
 		$lng = dms2decimal($lng);
 		($radius) = split('K',$radius);
