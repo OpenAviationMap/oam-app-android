@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Math::Trig;
+use Data::Dumper;
 
 unless (eval { require XML::Twig }) {
 	print STDERR "XML::Twig is not installed please install it\n";
@@ -25,9 +26,14 @@ $aviation_area_type = "danger" unless $aviation_area_type;
 sub parse_eaip_file {
 	my ($fn) = @_;
 	my $x=XML::Twig->new();
-	$x->parsefile($fn);
+
+	unless (eval { $x->parsefile($fn);}) {
+		print STDERR "$fn is not a well formed xml\n";
+		return;
+	}
 	
-	my @sections = $x->descendants('e:Sub-section');
+	my @sections = $x->descendants('x:table');
+	
 	foreach my $section ( @sections ) {
 		my ($thead,undef,@rows) = $section->descendants('x:tr');
 		foreach (@rows) {
