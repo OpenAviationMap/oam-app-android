@@ -42,8 +42,12 @@ public class MapTileProviderFactory implements MapViewConstants {
 	/**
 	 * Get a tile provider by scanning the sdcard/openaviationmap/osmdroid
      * directory for stored files.
+     *
+     * @param aContext the context
+     * @param baseName the base name of the layer to provide tiles for
 	 */
-	public static MapTileProviderBase getInstance(final Context aContext) {
+	public static MapTileProviderBase getInstance(final Context aContext,
+	                                              final String baseName) {
 
 		// list the archive files available
 		final File OAM_PATH = new File(Environment.getExternalStorageDirectory(),
@@ -54,9 +58,11 @@ public class MapTileProviderFactory implements MapViewConstants {
         final File[] files = OAM_PATH.listFiles();
         if (files != null) {
             for (final File file : files) {
-                final IArchiveFile archiveFile = ArchiveFileFactory.getArchiveFile(file);
-                if (archiveFile != null) {
-                    archiveFiles.add(archiveFile);
+                if (file.getName().startsWith(baseName)) {
+                    final IArchiveFile archiveFile = ArchiveFileFactory.getArchiveFile(file);
+                    if (archiveFile != null) {
+                        archiveFiles.add(archiveFile);
+                    }
                 }
             }
         }
@@ -64,14 +70,14 @@ public class MapTileProviderFactory implements MapViewConstants {
         IArchiveFile[] aFiles = new IArchiveFile[archiveFiles.size()];
         aFiles = archiveFiles.toArray(aFiles);
 
-        MapTileFileArchiveProvider ize = new MapTileFileArchiveProvider(
+        MapTileFileArchiveProvider mtfap = new MapTileFileArchiveProvider(
                 new SimpleRegisterReceiver(aContext.getApplicationContext()),
                 null,
                 aFiles);
 
         MapTileModuleProviderBase[] tileProviders =
                 new MapTileModuleProviderBase[1];
-        tileProviders[0] = ize;
+        tileProviders[0] = mtfap;
 
         MapTileProviderArray provider = new MapTileProviderArray(null,
                 new SimpleRegisterReceiver(aContext.getApplicationContext()),

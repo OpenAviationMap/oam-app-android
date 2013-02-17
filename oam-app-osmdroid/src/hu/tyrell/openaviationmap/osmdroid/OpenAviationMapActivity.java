@@ -71,10 +71,10 @@ public class OpenAviationMapActivity extends Activity implements OpenAviationMap
 		final RelativeLayout rl = new RelativeLayout(this);
 		rl.setBackgroundColor(Color.WHITE);
 
-        MapTileProviderBase tileProvider =
-                MapTileProviderFactory.getInstance(getApplicationContext());
+        MapTileProviderBase osmTileProvider =
+                MapTileProviderFactory.getInstance(getApplicationContext(), "osm");
 
-		this.mOsmv = new MapView(this, 256, mResourceProxy, tileProvider);
+		this.mOsmv = new MapView(this, 256, mResourceProxy, osmTileProvider);
 		this.mOsmv.setBackgroundColor(0xFFFFFF);
         this.mOsmv.setBuiltInZoomControls(true);
         this.mOsmv.setMultiTouchControls(true);
@@ -102,17 +102,17 @@ public class OpenAviationMapActivity extends Activity implements OpenAviationMap
         mScaleBarOverlay.setBarPaint(paint);
         mOsmv.getOverlays().add(mScaleBarOverlay);
 
-        mBaseTileSource = new XYTileSource("ICAO ground chart", null, 0, 14, 256, ".png");
-        tileProvider.setTileSource(mBaseTileSource);
+        mBaseTileSource = new XYTileSource("osm", null, 0, 15, 256, ".png");
+        osmTileProvider.setTileSource(mBaseTileSource);
         mOsmv.setTileSource(mBaseTileSource);
 
-        MapTileProviderBase tileProviderr =
-                MapTileProviderFactory.getInstance(getApplicationContext());
-        ITileSource tileSource = new XYTileSource("Open Aviation Map", null, 0, 14, 256, ".png");
-        tileProviderr.setTileSource(tileSource);
-        TilesOverlay tilesOverlayy = new TilesOverlay(tileProviderr, this.getBaseContext());
-        tilesOverlayy.setLoadingBackgroundColor(Color.TRANSPARENT);
-        mOsmv.getOverlays().add(tilesOverlayy);
+        MapTileProviderBase oamTileProvider =
+                MapTileProviderFactory.getInstance(getApplicationContext(), "oam");
+        ITileSource tileSource = new XYTileSource("oam", null, 0, 15, 256, ".png");
+        oamTileProvider.setTileSource(tileSource);
+        TilesOverlay oamTilesOverlay = new TilesOverlay(oamTileProvider, this.getBaseContext());
+        oamTilesOverlay.setLoadingBackgroundColor(Color.TRANSPARENT);
+        mOsmv.getOverlays().add(oamTilesOverlay);
 
         //mOsmv.getController().setZoom(mPrefs.getInt(PREFS_ZOOM_LEVEL, 1));
         //mOsmv.scrollTo(mPrefs.getInt(PREFS_SCROLL_X, 0), mPrefs.getInt(PREFS_SCROLL_Y, 0));
