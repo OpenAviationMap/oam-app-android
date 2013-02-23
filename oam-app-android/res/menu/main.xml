@@ -1,9 +1,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
+    <item android:id="@+id/action_zoom_in"
+          android:orderInCategory="10"
+          android:showAsAction="always"
+          android:icon="@drawable/zoom_in"
+          android:title="@string/action_zoom_in"/>
+
+    <item android:id="@+id/action_zoom_out"
+          android:orderInCategory="11"
+          android:showAsAction="always"
+          android:icon="@drawable/zoom_out"
+          android:title="@string/action_zoom_in"/>
+
+    <item android:id="@+id/action_show_location"
+          android:orderInCategory="12"
+          android:showAsAction="always"
+          android:icon="@drawable/show_location"
+          android:title="@string/action_show_location"/>
+    
+    <item android:id="@+id/action_get_maps"
+          android:orderInCategory="100"
+          android:showAsAction="never"
+          android:title="@string/action_get_maps"/>
 
 </menu>

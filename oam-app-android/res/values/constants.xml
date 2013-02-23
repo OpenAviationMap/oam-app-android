@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="osm_map_file">osm.gemf</string>
-    <string name="oam_map_file">oam.gemf</string>
-    
 </resources>

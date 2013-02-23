@@ -1,59 +1,117 @@
 package hu.tyrell.openaviationmap.android;
 
 import java.io.File;
-import java.util.Random;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+import android.text.format.Formatter;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.codeslap.groundy.DetachableResultReceiver;
 import com.codeslap.groundy.Groundy;
 import com.codeslap.groundy.GroundyManger;
-import com.codeslap.groundy.util.Bundler;
 
 public class DownloadMapActivity extends Activity {
 
+    private enum State implements Parcelable {
+        INCOMPLETE(0),
+        COMPLETE(1),
+        DOWNLOADING(2),
+        CANCELLED(3);
+
+        private final int value;
+
+        private State(int v) {
+            value = v;
+        }
+
+        public static final Parcelable.Creator<State> CREATOR
+                                    = new Parcelable.Creator<State>() {
+            @Override
+            public State createFromParcel(Parcel in) {
+                switch (in.readInt()) {
+                default:
+                case 0:
+                    return INCOMPLETE;
+                case 1:
+                    return COMPLETE;
+                case 2:
+                    return DOWNLOADING;
+                case 3:
+                    return CANCELLED;
+                }
+            }
+
+            @Override
+            public State[] newArray(int size) {
+                return new State[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(value);
+        }
+    };
+
     private static String TAG = "DownloadMapActivity";
 
+    // use the activity ID as its a unique number
     private static int DOWNLOAD_NOTIFICATIONS = R.layout.activity_download;
+    private static int GROUP                  = R.layout.activity_download;
 
     private static String PROGRESS_KEY = "progress";
     private static String RECEIVER_KEY = "receiver";
-    private static String DOWNLOADING_KEY = "downloading";
-    private static int GROUP = 1;
-    private static String TOKEN = "download_token";
+    private static String STATE_KEY = "state";
+    private static String DOWNLOAD_START_KEY = "download_start";
 
     private NotificationManager mNM;
     private NotificationCompat.Builder mBuilder;
     private DetachableResultReceiver mDetachableReceiver;
-    private boolean downloading;
+    private State state;
+    private long downloadStart;
+    private boolean visible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download);
 
-        Log.i(TAG, "onCreate " + System.identityHashCode(this));
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(R.string.action_get_maps);
 
         mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(this);
 
-        downloading = false;
+        state = mapsAvailableLocally() ? State.COMPLETE
+                                       : State.INCOMPLETE;
 
         if (savedInstanceState != null) {
-            updateMainProgress(savedInstanceState.getInt(PROGRESS_KEY));
-            mDetachableReceiver = savedInstanceState.getParcelable(RECEIVER_KEY);
-            downloading = savedInstanceState.getBoolean(DOWNLOADING_KEY);
+            updateMainProgress(0, 0, savedInstanceState.getInt(PROGRESS_KEY));
+            mDetachableReceiver =
+                                savedInstanceState.getParcelable(RECEIVER_KEY);
+            state = savedInstanceState.getParcelable(STATE_KEY);
+            downloadStart = savedInstanceState.getLong(DOWNLOAD_START_KEY);
         } else {
             mDetachableReceiver = new DetachableResultReceiver(new Handler());
         }
@@ -75,126 +133,123 @@ public class DownloadMapActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        Log.i(TAG, "onSaveInstanceState");
-
         ProgressBar bp = getProgressBar();
         outState.putInt(PROGRESS_KEY, bp.getProgress());
         outState.putParcelable(RECEIVER_KEY, mDetachableReceiver);
-        outState.putBoolean(DOWNLOADING_KEY, true);
+        outState.putParcelable(STATE_KEY, state);
+        outState.putLong(DOWNLOAD_START_KEY, downloadStart);
     }
 
-
     @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i(TAG, "onStart");
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            // app icon in action bar clicked; go home
+            Intent intent = new Intent(this, HomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume");
-    }
 
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.i(TAG, "onRestart");
+        visible = true;
+
+        if (state != State.DOWNLOADING) {
+            mNM.cancel(DOWNLOAD_NOTIFICATIONS);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.i(TAG, "onPause");
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.i(TAG, "onStop");
+        visible = false;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "onDestroy");
 
         mDetachableReceiver.clearReceiver();
     }
 
     @Override
     public void onBackPressed() {
-        Log.i(TAG, "onBackPressed");
-
         moveTaskToBack(true);
     }
 
     private void downloadButtonPressed() {
-        Log.i(TAG, "downloadButtonPressed " + downloading);
-
-        if (downloading) {
+        if (state == State.DOWNLOADING) {
             // cancel download
             GroundyManger.cancelTasks(this, GROUP);
 
             Button downloadButton = (Button) findViewById(R.id.downloadButton);
             downloadButton.setActivated(false);
 
+            if (visible) {
+                mNM.cancel(DOWNLOAD_NOTIFICATIONS);
+            }
+
             // labels will be set up when the process is canceled
         } else {
             startDownload();
             updateLabels();
         }
-
     }
 
     private void updateLabels() {
         Button downloadButton = (Button) findViewById(R.id.downloadButton);
         TextView note = (TextView) findViewById(R.id.textNote);
 
-        if (downloading) {
+        switch (state) {
+        case DOWNLOADING:
             downloadButton.setActivated(true);
             downloadButton.setText(R.string.download_cancel);
-            note.setText(R.string.download_inprogress);
-        } else {
-            if (MainActivity.mapsAvailableLocally()) {
-                downloadButton.setActivated(true);
-                downloadButton.setText(R.string.download_force_start);
-                note.setText(R.string.download_force_notification);
-            } else {
-                downloadButton.setActivated(true);
-                downloadButton.setText(R.string.download_start);
-                note.setText(R.string.download_notification);
-            }
-        }
+            note.setText(R.string.download_starting);
+            break;
 
+        case COMPLETE:
+            downloadButton.setActivated(true);
+            downloadButton.setText(R.string.download_force_start);
+            note.setText(R.string.download_force_notification);
+            break;
+
+        default:
+            downloadButton.setActivated(true);
+            downloadButton.setText(R.string.download_start);
+            note.setText(R.string.download_notification);
+        }
     }
 
     private void startDownload() {
-        if (!downloading) {
+        if (state != State.DOWNLOADING) {
             // remove the files
-            File oamPath = MainActivity.getDataPath();
-            File osm_gemf = new File(oamPath, MainActivity.OSM_MAP_FILE);
-            File oam_gemf = new File(oamPath, MainActivity.OAM_MAP_FILE);
+            File oamPath = getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+            File osm_gemf = new File(oamPath, HomeActivity.OSM_MAP_FILE);
+            File oam_gemf = new File(oamPath, HomeActivity.OAM_MAP_FILE);
 
             osm_gemf.delete();
             oam_gemf.delete();
 
-            // start the download task
-            int time = new Random().nextInt(10000);
-            Bundle params = new Bundler().add(DownloadMapTask.KEY_ESTIMATED, time).build();
+            state = State.DOWNLOADING;
+            downloadStart = System.currentTimeMillis();
 
+            // start the download task
             Groundy groundy = Groundy.create(this, DownloadMapTask.class);
             groundy.receiver(mDetachableReceiver);
-            groundy.params(params);
-            groundy.token(TOKEN);
             groundy.group(GROUP);
             groundy.queue();
-
-            downloading = true;
         }
     }
 
-    private final DetachableResultReceiver.Receiver mReceiver = new DetachableResultReceiver.Receiver() {
+    private final DetachableResultReceiver.Receiver mReceiver =
+                                      new DetachableResultReceiver.Receiver() {
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
             switch (resultCode) {
@@ -207,38 +262,93 @@ public class DownloadMapActivity extends Activity {
             } break;
 
             case Groundy.STATUS_PROGRESS: {
-                double progress = ((double) resultData.getInt(DownloadMapTask.KEY_COUNT))
-                                / ((double) resultData.getInt(DownloadMapTask.KEY_ESTIMATED));
+                long count  = resultData.getLong(DownloadMapTask.KEY_COUNT);
+                long total  = resultData.getLong(DownloadMapTask.KEY_ESTIMATED);
+                int progress = resultData.getInt(Groundy.KEY_PROGRESS);
 
-                showNotification(R.drawable.icon, R.string.download_status, progress);
-                updateMainProgress(progress);
+                showNotification(false, count, total, progress);
+                updateMainProgress(count, total, progress);
             } break;
 
-            case Groundy.STATUS_FINISHED:
-                Log.i(TAG, "STATUS_FINISHED");
+            case Groundy.STATUS_FINISHED: {
+                state = resultData.containsKey(DownloadMapTask.KEY_CANCELLED)
+                      ? State.CANCELLED
+                      : State.COMPLETE;
 
-                downloading = false;
-                mNM.cancel(DOWNLOAD_NOTIFICATIONS);
+                if (visible) {
+                    mNM.cancel(DOWNLOAD_NOTIFICATIONS);
+                } else {
+                    long count  = resultData.getLong(DownloadMapTask.KEY_COUNT);
+                    long total  = resultData.getLong(
+                                                DownloadMapTask.KEY_ESTIMATED);
+                    int progress = resultData.getInt(Groundy.KEY_PROGRESS);
+                    showNotification(true, count, total, progress);
+                }
                 updateLabels();
                 ProgressBar pb = getProgressBar();
                 pb.setIndeterminate(false);
                 pb.setProgress(0);
 
-                Log.i(TAG, resultData.toString());
-
-                break;
+                if (state == State.COMPLETE && mapsAvailableLocally()) {
+                    startActivity(new Intent(DownloadMapActivity.this,
+                                             HomeActivity.class));
+                    finish();
+                }
+            } break;
 
             default:
+            case Groundy.STATUS_ERROR: {
+                Toast t = Toast.makeText(DownloadMapActivity.this,
+                                         R.string.download_error,
+                                         Toast.LENGTH_LONG);
+                t.show();
+                mNM.cancel(DOWNLOAD_NOTIFICATIONS);
+                state = State.INCOMPLETE;
+                updateLabels();
+                ProgressBar pb = getProgressBar();
+                pb.setIndeterminate(false);
+                pb.setProgress(0);
+            }
             }
         }
     };
 
-    private void showNotification(int iconId, int textId, double d) {
+    private void
+    showNotification(boolean complete,
+                     long    count,
+                     long    total,
+                     int     progress) {
 
-        mBuilder.setContentTitle(getText(R.string.app_name));
-        mBuilder.setSmallIcon(iconId);
-        mBuilder.setContentText(getText(textId));
-        mBuilder.setProgress(100, (int) (100d * d), false);
+        if (complete) {
+            mBuilder.setSmallIcon(R.drawable.navigation_accept);
+            mBuilder.setContentTitle(getText(R.string.download_complete));
+            mBuilder.setProgress(100, 100, false);
+            mBuilder.setOngoing(false);
+            mBuilder.setContentText("");
+            mBuilder.setContentInfo("");
+        } else {
+            mBuilder.setContentTitle(
+                                  getText(R.string.download_inprogress_label));
+            mBuilder.setSmallIcon(R.drawable.av_download);
+            mBuilder.setProgress(100, progress, false);
+            mBuilder.setOngoing(true);
+
+            Resources res = getResources();
+            long now = System.currentTimeMillis();
+            long speed = 1000 * count / (now - downloadStart);
+
+            String text = String.format(
+                    res.getString(R.string.download_inprogress_notification),
+                                  Formatter.formatFileSize(this, count),
+                                  Formatter.formatFileSize(this, total),
+                                  Formatter.formatFileSize(this, speed));
+            mBuilder.setContentText(text);
+
+            text = String.format(
+                    res.getString(R.string.download_inprogress_percent),
+                    progress);
+            mBuilder.setContentInfo(text);
+        }
 
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                               new Intent(this, DownloadMapActivity.class), 0);
@@ -247,17 +357,39 @@ public class DownloadMapActivity extends Activity {
         mNM.notify(DOWNLOAD_NOTIFICATIONS, mBuilder.build());
     }
 
-    private void updateMainProgress(double progress) {
+    private void updateMainProgress(long count, long total, int progress) {
         ProgressBar pb = getProgressBar();
+        TextView note = (TextView) findViewById(R.id.textNote);
 
         if (pb != null) {
             pb.setIndeterminate(false);
-            pb.setProgress((int) (progress * 100));
+            pb.setProgress(progress);
         }
+
+        Resources res = getResources();
+        long now = System.currentTimeMillis();
+        long speed = 1000 * count / (now - downloadStart);
+
+        String text = String.format(res.getString(R.string.download_inprogress),
+                                    progress,
+                                    Formatter.formatFileSize(this, count),
+                                    Formatter.formatFileSize(this, total),
+                                    Formatter.formatFileSize(this, speed));
+        note.setText(text);
     }
 
     private ProgressBar getProgressBar() {
         return (ProgressBar) findViewById(R.id.downloadProgressBar);
+    }
+
+    public boolean mapsAvailableLocally() {
+        // TODO: store this as a preference with a default value
+        final File oamPath = getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+
+        File osm_gemf = new File(oamPath, HomeActivity.OSM_MAP_FILE);
+        File oam_gemf = new File(oamPath, HomeActivity.OAM_MAP_FILE);
+
+        return osm_gemf.exists() && oam_gemf.exists();
     }
 
 }
