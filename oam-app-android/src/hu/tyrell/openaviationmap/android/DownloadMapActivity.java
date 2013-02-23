@@ -326,6 +326,10 @@ public class DownloadMapActivity extends Activity {
             mBuilder.setOngoing(false);
             mBuilder.setContentText("");
             mBuilder.setContentInfo("");
+
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                    new Intent(this, HomeActivity.class), 0);
+            mBuilder.setContentIntent(contentIntent);
         } else {
             mBuilder.setContentTitle(
                                   getText(R.string.download_inprogress_label));
@@ -348,11 +352,12 @@ public class DownloadMapActivity extends Activity {
                     res.getString(R.string.download_inprogress_percent),
                     progress);
             mBuilder.setContentInfo(text);
+
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                    new Intent(this, DownloadMapActivity.class), 0);
+            mBuilder.setContentIntent(contentIntent);
         }
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                              new Intent(this, DownloadMapActivity.class), 0);
-        mBuilder.setContentIntent(contentIntent);
 
         mNM.notify(DOWNLOAD_NOTIFICATIONS, mBuilder.build());
     }

@@ -77,7 +77,7 @@ public class MapTileProviderFactory implements MapViewConstants {
                 aFiles);
 
         MapTileModuleProviderBase[] tileProviders =
-                new MapTileModuleProviderBase[1];
+                                        new MapTileModuleProviderBase[1];
         tileProviders[0] = mtfap;
 
         MapTileProviderArray provider = new MapTileProviderArray(null,

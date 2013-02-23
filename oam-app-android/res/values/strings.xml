@@ -2,11 +2,17 @@
 <resources>
 
     <string name="app_name">Open Aviation Map</string>
+    <string name="welcome">Welcome to Open Aviation Map</string>
+    
     <string name="action_get_maps">Get Open Aviation Maps</string>
     <string name="action_zoom_in">Zoom In</string>
     <string name="action_zoom_out">Zoom Out</string>
-    <string name="action_show_location">Show Location</string>
-    <string name="welcome">Welcome to Open Aviation Map</string>
+    <string name="action_follow_location">Follow Location</string>
+    <string name="action_follow_location_dont">Don\'t Follow Location</string>
+    <string name="action_screen_lock">Lock Orientation</string>
+    <string name="action_screen_unlock">Unlock Orientation</string>
+    <string name="action_wake_lock">Keep Awake</string>
+    <string name="action_wake_unlock">Auto Sleep</string>
     
     <string name="download_notification">
         Press \'Start\' below to start downloading maps.

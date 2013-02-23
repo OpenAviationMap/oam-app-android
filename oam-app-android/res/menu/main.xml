@@ -10,13 +10,25 @@
           android:orderInCategory="11"
           android:showAsAction="always"
           android:icon="@drawable/zoom_out"
-          android:title="@string/action_zoom_in"/>
+          android:title="@string/action_zoom_out"/>
 
-    <item android:id="@+id/action_show_location"
+    <item android:id="@+id/action_follow_location"
           android:orderInCategory="12"
           android:showAsAction="always"
-          android:icon="@drawable/show_location"
-          android:title="@string/action_show_location"/>
+          android:icon="@drawable/follow_location_off"
+          android:title="@string/action_follow_location"/>
+
+    <item android:id="@+id/action_screen_lock"
+          android:orderInCategory="13"
+          android:showAsAction="always"
+          android:icon="@drawable/screen_not_locked"
+          android:title="@string/action_screen_lock" />
+
+    <item android:id="@+id/action_wake_lock"
+          android:orderInCategory="14"
+          android:showAsAction="always"
+          android:icon="@drawable/wake_auto"
+          android:title="@string/action_wake_lock" />
     
     <item android:id="@+id/action_get_maps"
           android:orderInCategory="100"
