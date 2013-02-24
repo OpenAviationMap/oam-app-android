@@ -363,13 +363,15 @@ public class DownloadMapActivity extends Activity {
             Resources res = getResources();
             long now = System.currentTimeMillis();
             long speed = 1000 * count / (now - downloadStart);
-            long estSecsLeft = 0;
-            long estMinsLeft = 0;
+            long estSecsLeft  = 0;
+            long estMinsLeft  = 0;
+            long estHoursLeft = 0;
             if (count > 0) {
                 double c = count;
                 estSecsLeft = (long)
                                 ((now - downloadStart) / (c / total) / 1000d);
-                estMinsLeft = estSecsLeft / 60;
+                estHoursLeft = estSecsLeft / 3600;
+                estMinsLeft  = (estSecsLeft / 60) % 60;
                 estSecsLeft %= 60;
             }
 
@@ -382,7 +384,7 @@ public class DownloadMapActivity extends Activity {
 
             text = String.format(
                     res.getString(R.string.download_inprogress_percent),
-                    progress, estMinsLeft, estSecsLeft);
+                    progress, estHoursLeft, estMinsLeft, estSecsLeft);
             mBuilder.setContentInfo(text);
 
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -406,12 +408,14 @@ public class DownloadMapActivity extends Activity {
         Resources res = getResources();
         long now = System.currentTimeMillis();
         long speed = 1000 * count / (now - downloadStart);
-        long estSecsLeft = 0;
-        long estMinsLeft = 0;
+        long estSecsLeft  = 0;
+        long estMinsLeft  = 0;
+        long estHoursLeft = 0;
         if (count > 0) {
             double c = count;
             estSecsLeft = (long) ((now - downloadStart) / (c / total) / 1000d);
-            estMinsLeft = estSecsLeft / 60;
+            estHoursLeft = estSecsLeft / 3600;
+            estMinsLeft  = (estSecsLeft / 60) % 60;
             estSecsLeft %= 60;
         }
 
@@ -420,7 +424,7 @@ public class DownloadMapActivity extends Activity {
                                     Formatter.formatFileSize(this, count),
                                     Formatter.formatFileSize(this, total),
                                     Formatter.formatFileSize(this, speed),
-                                    estMinsLeft, estSecsLeft);
+                                    estHoursLeft, estMinsLeft, estSecsLeft);
         note.setText(text);
     }
 

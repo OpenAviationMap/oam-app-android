@@ -28,11 +28,11 @@
         will be downloaded
     </string>
     <string name="download_status">Downloading maps&#8230;</string>
-    <string name="download_starting">Staring download&#8230;</string>
-    <string name="download_inprogress">Downloading maps&#8230;\n%1$d%%, %2$s of %3$s, %4$s/s %5$02d:%6$02d left</string>
+    <string name="download_starting">Starting download&#8230;</string>
+    <string name="download_inprogress">Downloading maps&#8230;\n%1$d%%, %2$s of %3$s, %4$s/s %5$02d:%6$02d:%7$02d left</string>
     <string name="download_inprogress_label">Downloading maps&#8230;</string>
     <string name="download_inprogress_notification">%1$s of %2$s, %3$s/s</string>
-    <string name="download_inprogress_percent">%1$d%% %2$02d:%3$02d</string>
+    <string name="download_inprogress_percent">%1$d%% %2$02d:%3$02d:%4$02d</string>
     <string name="download_force_start">Force Start</string>
     <string name="download_complete">Map Download Complete!</string>
     <string name="download_error">An error occurred while downloading :(</string>
