@@ -15,12 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package hu.tyrell.openaviationmap.android;
-
-import hu.tyrell.openaviationmap.android.R.id;
+package org.openaviationmap.android;
 
 import java.io.File;
 
+import org.openaviationmap.android.R.id;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
