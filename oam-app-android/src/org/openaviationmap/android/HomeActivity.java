@@ -52,6 +52,10 @@ public class HomeActivity extends Activity {
     public static String OSM_MAP_FILE    = "osm.gemf";
     public static String OAM_MAP_FILE    = "oam.gemf";
 
+    private static int ZOOM_MIN = 0;
+    private static int ZOOM_MAX = 14;
+    private static int TILE_SIZE = 256;
+
     private static String PREFERENCES_NAME  =
                                         HomeActivity.class.getCanonicalName();
     private static String KEY_ZOOM_LEVEL      = "zoom_level";
@@ -101,7 +105,8 @@ public class HomeActivity extends Activity {
         mOsmv.setMultiTouchControls(true);
 
         // add the ground map
-        mBaseTileSource = new XYTileSource("osm", null, 0, 13, 256, ".png");
+        mBaseTileSource = new XYTileSource("osm", null, ZOOM_MIN, ZOOM_MAX,
+                                           TILE_SIZE, ".png");
 
         mOsmTileProvider.setTileSource(mBaseTileSource);
         mOsmv.setTileSource(mBaseTileSource);
@@ -109,8 +114,8 @@ public class HomeActivity extends Activity {
         // add the aviation map as an overlay
         mOamTileProvider = MapTileProviderFactory.getInstance(
                                             getApplicationContext(), "oam");
-        ITileSource tileSource = new XYTileSource("oam", null, 0, 13, 256,
-                                                  ".png");
+        ITileSource tileSource = new XYTileSource("oam", null, ZOOM_MIN,
+                                                  ZOOM_MAX, TILE_SIZE, ".png");
         mOamTileProvider.setTileSource(tileSource);
         TilesOverlay oamTilesOverlay = new TilesOverlay(mOamTileProvider,
                                                      this.getBaseContext());
