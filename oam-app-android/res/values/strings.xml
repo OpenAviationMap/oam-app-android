@@ -39,4 +39,9 @@
     <string name="download_start">Start</string>
     <string name="download_cancel">Cancel</string>
     
+    <string name="ok">OK</string>
+    <string name="donate">Donate %1$s!</string>
+    <string name="donation_successful">Thank you for your worthy donation!</string>
+    <string name="donation_failed">Donation attempt failed :(</string>
+    
 </resources>

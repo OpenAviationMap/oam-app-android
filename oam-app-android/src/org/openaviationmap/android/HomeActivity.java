@@ -18,8 +18,15 @@
 package org.openaviationmap.android;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.openaviationmap.android.R.id;
+import org.openaviationmap.android.billing.IabHelper;
+import org.openaviationmap.android.billing.IabResult;
+import org.openaviationmap.android.billing.Inventory;
+import org.openaviationmap.android.billing.Purchase;
+import org.openaviationmap.android.billing.SkuDetails;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
@@ -29,11 +36,13 @@ import org.osmdroid.views.overlay.MyLocationOverlay;
 import org.osmdroid.views.overlay.TilesOverlay;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -65,6 +74,16 @@ public class HomeActivity extends Activity {
     private static String KEY_FOLLOW_LOCATION = "follow_location";
     private static String KEY_WAKE_LOCK       = "wake_lock";
 
+    private static String SKU_DONATION_0 = "donation_0";
+    private static String SKU_DONATION_1 = "donation_1";
+    private static String SKU_DONATION_2 = "donation_2";
+    private static String SKU_DONATION_3 = "donation_3";
+    private static String SKU_DONATION_4 = "donation_4";
+    private static int IAB_REQUEST_CODE  = 112111;
+
+    private static String[] SKU_DONATION_NAMES = { SKU_DONATION_0,
+            SKU_DONATION_1, SKU_DONATION_2, SKU_DONATION_3, SKU_DONATION_4 };
+
     private MapView             mOsmv            = null;
     private MyLocationOverlay   mLocationOverlay = null;
     private ITileSource         mBaseTileSource  = null;
@@ -77,6 +96,12 @@ public class HomeActivity extends Activity {
     private Menu                menu     = null;
     PowerManager.WakeLock       wakeLock = null;
 
+    private IabHelper           iabHelper;
+
+    private final ArrayList<String>   donation_skus   = new ArrayList<String>();
+    private final ArrayList<String>   donation_prices = new ArrayList<String>();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +112,8 @@ public class HomeActivity extends Activity {
             oamPath.mkdirs();
         }
 
+
+        // set up the map view
         mResourceProxy = new ResourceProxyImpl(getApplicationContext());
 
         mOsmTileProvider = MapTileProviderFactory.getInstance(
@@ -128,6 +155,26 @@ public class HomeActivity extends Activity {
 
         mOsmv.getOverlays().add(mLocationOverlay);
         mLocationOverlay.enableMyLocation();
+
+
+
+        // set up in-app donations
+        Resources res = getResources();
+        String licenseKey = res.getString(R.string.google_play_license_key);
+        if (!licenseKey.isEmpty()) {
+            iabHelper = new IabHelper(this, licenseKey);
+
+            iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+                @Override
+                public void onIabSetupFinished(IabResult result) {
+                    if (result.isSuccess()) {
+                        iabHelper.queryInventoryAsync(true,
+                                             Arrays.asList(SKU_DONATION_NAMES),
+                                             gotInventoryListener);
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -244,6 +291,8 @@ public class HomeActivity extends Activity {
             wakeLockMenu.setTitle(R.string.action_wake_lock);
         }
 
+        appendDonationsToMenu();
+
         return true;
     }
 
@@ -318,6 +367,12 @@ public class HomeActivity extends Activity {
                 item.setTitle(R.string.action_wake_lock);
             }
 
+        case R.id.action_donate_0:
+            if (iabHelper != null) {
+                iabHelper.launchPurchaseFlow(this, donation_skus.get(0),
+                                 IAB_REQUEST_CODE, purchaseFinishedListener);
+            }
+
         default:
             return super.onOptionsItemSelected(item);
         }
@@ -361,4 +416,103 @@ public class HomeActivity extends Activity {
 
         return osm_gemf.exists() && oam_gemf.exists();
     }
+
+    IabHelper.QueryInventoryFinishedListener
+    gotInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
+        @Override
+        public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+            if (result.isFailure()) {
+                return;
+            }
+
+            for (String sku : SKU_DONATION_NAMES) {
+                if (inventory.hasDetails(sku)) {
+                    SkuDetails d = inventory.getSkuDetails(sku);
+
+                    String price = d.getPrice();
+
+                    donation_skus.add(sku);
+                    donation_prices.add(price);
+                }
+            }
+
+            appendDonationsToMenu();
+        }
+    };
+
+    private void appendDonationsToMenu() {
+        if (donation_skus.size() != donation_prices.size() || menu == null) {
+            return;
+        }
+
+        Resources res = getResources();
+        String    donate = res.getString(R.string.donate);
+        MenuItem item;
+
+        switch (donation_skus.size()) {
+        default:
+        case 5:
+            item = menu.findItem(R.id.action_donate_4);
+            item.setTitle(String.format(donate, donation_prices.get(4)));
+            item.setVisible(true);
+
+        case 4:
+            item = menu.findItem(R.id.action_donate_3);
+            item.setTitle(String.format(donate, donation_prices.get(3)));
+            item.setVisible(true);
+
+        case 3:
+            item = menu.findItem(R.id.action_donate_2);
+            item.setTitle(String.format(donate, donation_prices.get(2)));
+            item.setVisible(true);
+
+        case 2:
+            item = menu.findItem(R.id.action_donate_1);
+            item.setTitle(String.format(donate, donation_prices.get(1)));
+            item.setVisible(true);
+
+        case 1:
+            item = menu.findItem(R.id.action_donate_0);
+            item.setTitle(String.format(donate, donation_prices.get(0)));
+            item.setVisible(true);
+
+        case 0:
+        }
+    }
+
+    IabHelper.OnIabPurchaseFinishedListener
+    purchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
+        @Override
+        public void onIabPurchaseFinished(IabResult result, Purchase purchase) {
+            if (result.isFailure()) {
+                AlertDialog.Builder bld = new AlertDialog.Builder(
+                                                            HomeActivity.this);
+                bld.setMessage(R.string.donation_failed);
+                bld.setNeutralButton(R.string.ok, null);
+                bld.create().show();
+                return;
+            }
+
+            iabHelper.consumeAsync(purchase, consumeFinishedListener);
+        }
+    };
+
+    // Called when consumption is complete
+    IabHelper.OnConsumeFinishedListener
+    consumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
+        @Override
+        public void onConsumeFinished(Purchase purchase, IabResult result) {
+            AlertDialog.Builder bld = new AlertDialog.Builder(HomeActivity.this);
+            bld.setNeutralButton(R.string.ok, null);
+
+            if (result.isSuccess()) {
+                bld.setMessage(R.string.donation_successful);
+            } else {
+                bld.setMessage(R.string.donation_failed);
+            }
+
+            bld.create().show();
+        }
+    };
+
 }
