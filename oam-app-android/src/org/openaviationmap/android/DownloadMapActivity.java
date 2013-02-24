@@ -42,6 +42,7 @@ import android.widget.Toast;
 import com.codeslap.groundy.DetachableResultReceiver;
 import com.codeslap.groundy.Groundy;
 import com.codeslap.groundy.GroundyManger;
+import com.euedge.openaviationmap.android.R;
 
 public class DownloadMapActivity extends Activity {
 
@@ -368,8 +369,9 @@ public class DownloadMapActivity extends Activity {
             long estHoursLeft = 0;
             if (count > 0) {
                 double c = count;
-                estSecsLeft = (long)
-                                ((now - downloadStart) / (c / total) / 1000d);
+                double secs = (now - downloadStart) / 1000d;
+                long estSecs = (long) (secs / (c / total));
+                estSecsLeft = estSecs - (long) secs;
                 estHoursLeft = estSecsLeft / 3600;
                 estMinsLeft  = (estSecsLeft / 60) % 60;
                 estSecsLeft %= 60;
@@ -413,7 +415,9 @@ public class DownloadMapActivity extends Activity {
         long estHoursLeft = 0;
         if (count > 0) {
             double c = count;
-            estSecsLeft = (long) ((now - downloadStart) / (c / total) / 1000d);
+            double secs = (now - downloadStart) / 1000d;
+            long estSecs = (long) (secs / (c / total));
+            estSecsLeft = estSecs - (long) secs;
             estHoursLeft = estSecsLeft / 3600;
             estMinsLeft  = (estSecsLeft / 60) % 60;
             estSecsLeft %= 60;

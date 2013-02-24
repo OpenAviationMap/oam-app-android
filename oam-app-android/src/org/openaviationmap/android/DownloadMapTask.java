@@ -40,7 +40,7 @@ import com.codeslap.groundy.GroundyTask;
 public class DownloadMapTask extends GroundyTask {
 
     private static final String FILELIST_URL =
-                                "http://www.openaviationmap.org/android.files";
+                              "http://files.openaviationmap.org/android.files";
     private static final String FILELIST_FILE = "android.files";
 
     public static final String KEY_ESTIMATED = "estimated";

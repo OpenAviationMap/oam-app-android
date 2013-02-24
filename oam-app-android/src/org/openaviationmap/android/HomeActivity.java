@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.openaviationmap.android.R.id;
 import org.openaviationmap.android.billing.IabHelper;
 import org.openaviationmap.android.billing.IabResult;
 import org.openaviationmap.android.billing.Inventory;
@@ -52,6 +51,8 @@ import android.view.MotionEvent;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+
+import com.euedge.openaviationmap.android.R;
 
 public class HomeActivity extends Activity {
 
@@ -259,7 +260,7 @@ public class HomeActivity extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         this.menu = menu;
 
-        MenuItem locMenu = menu.findItem(id.action_follow_location);
+        MenuItem locMenu = menu.findItem(R.id.action_follow_location);
         if (followFellow) {
             locMenu.setIcon(R.drawable.follow_location_on);
             locMenu.setTitle(R.string.action_follow_location_dont);
@@ -269,7 +270,7 @@ public class HomeActivity extends Activity {
         }
 
         int reqOrientation = getRequestedOrientation();
-        MenuItem orientationMenu = menu.findItem(id.action_screen_lock);
+        MenuItem orientationMenu = menu.findItem(R.id.action_screen_lock);
 
         if (reqOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             orientationMenu.setIcon(R.drawable.screen_locked_to_landscape);
@@ -282,7 +283,7 @@ public class HomeActivity extends Activity {
             orientationMenu.setTitle(R.string.action_screen_lock);
         }
 
-        MenuItem wakeLockMenu = menu.findItem(id.action_wake_lock);
+        MenuItem wakeLockMenu = menu.findItem(R.id.action_wake_lock);
         if (wakeLock != null) {
             wakeLockMenu.setIcon(R.drawable.wake_lock);
             wakeLockMenu.setTitle(R.string.action_wake_unlock);
@@ -382,7 +383,7 @@ public class HomeActivity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         followFellow = false;
 
-        MenuItem locMenu = menu.findItem(id.action_follow_location);
+        MenuItem locMenu = menu.findItem(R.id.action_follow_location);
         locMenu.setIcon(R.drawable.follow_location_off);
 
         return super.onTouchEvent(event);
@@ -392,7 +393,7 @@ public class HomeActivity extends Activity {
     public boolean onGenericMotionEvent(MotionEvent event) {
         followFellow = false;
 
-        MenuItem locMenu = menu.findItem(id.action_follow_location);
+        MenuItem locMenu = menu.findItem(R.id.action_follow_location);
         locMenu.setIcon(R.drawable.follow_location_off);
 
         return super.onGenericMotionEvent(event);
@@ -402,7 +403,7 @@ public class HomeActivity extends Activity {
     public boolean onTrackballEvent(final MotionEvent event) {
         followFellow = false;
 
-        MenuItem locMenu = menu.findItem(id.action_follow_location);
+        MenuItem locMenu = menu.findItem(R.id.action_follow_location);
         locMenu.setIcon(R.drawable.follow_location_off);
 
         return mOsmv.onTrackballEvent(event);

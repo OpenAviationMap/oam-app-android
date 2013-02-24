@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.openaviationmap.android"
-    android:versionCode="1"
+    package="com.euedge.openaviationmap.android"
+    android:versionCode="4"
     android:versionName="1.0beta" >
 
     <uses-sdk
@@ -27,7 +27,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         
-        <activity android:name=".HomeActivity"
+        <activity android:name="org.openaviationmap.android.HomeActivity"
                   android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,7 +35,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".DownloadMapActivity"
+        <activity android:name="org.openaviationmap.android.DownloadMapActivity"
                   android:launchMode="singleInstance"
                   android:theme="@style/AppTheme"
         />

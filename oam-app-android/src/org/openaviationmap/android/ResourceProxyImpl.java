@@ -24,6 +24,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 
+import com.euedge.openaviationmap.android.R;
+
 public class ResourceProxyImpl extends DefaultResourceProxyImpl {
 
 	private final Context mContext;
