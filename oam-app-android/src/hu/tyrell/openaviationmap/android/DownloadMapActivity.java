@@ -1,6 +1,24 @@
+/*
+    Open Aviation Map
+    Copyright (C) 2012-2013 Ákos Maróy
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package hu.tyrell.openaviationmap.android;
 
 import java.io.File;
+import java.io.FilenameFilter;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -231,11 +249,16 @@ public class DownloadMapActivity extends Activity {
         if (state != State.DOWNLOADING) {
             // remove the files
             File oamPath = getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
-            File osm_gemf = new File(oamPath, HomeActivity.OSM_MAP_FILE);
-            File oam_gemf = new File(oamPath, HomeActivity.OAM_MAP_FILE);
-
-            osm_gemf.delete();
-            oam_gemf.delete();
+            File[] files = oamPath.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String fileName) {
+                    return fileName.startsWith(HomeActivity.OSM_MAP_FILE)
+                        || fileName.startsWith(HomeActivity.OAM_MAP_FILE);
+                }
+            });
+            for (File f : files) {
+                f.delete();
+            }
 
             state = State.DOWNLOADING;
             downloadStart = System.currentTimeMillis();
@@ -340,6 +363,15 @@ public class DownloadMapActivity extends Activity {
             Resources res = getResources();
             long now = System.currentTimeMillis();
             long speed = 1000 * count / (now - downloadStart);
+            long estSecsLeft = 0;
+            long estMinsLeft = 0;
+            if (count > 0) {
+                double c = count;
+                estSecsLeft = (long)
+                                ((now - downloadStart) / (c / total) / 1000d);
+                estMinsLeft = estSecsLeft / 60;
+                estSecsLeft %= 60;
+            }
 
             String text = String.format(
                     res.getString(R.string.download_inprogress_notification),
@@ -350,7 +382,7 @@ public class DownloadMapActivity extends Activity {
 
             text = String.format(
                     res.getString(R.string.download_inprogress_percent),
-                    progress);
+                    progress, estMinsLeft, estSecsLeft);
             mBuilder.setContentInfo(text);
 
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -374,12 +406,21 @@ public class DownloadMapActivity extends Activity {
         Resources res = getResources();
         long now = System.currentTimeMillis();
         long speed = 1000 * count / (now - downloadStart);
+        long estSecsLeft = 0;
+        long estMinsLeft = 0;
+        if (count > 0) {
+            double c = count;
+            estSecsLeft = (long) ((now - downloadStart) / (c / total) / 1000d);
+            estMinsLeft = estSecsLeft / 60;
+            estSecsLeft %= 60;
+        }
 
         String text = String.format(res.getString(R.string.download_inprogress),
                                     progress,
                                     Formatter.formatFileSize(this, count),
                                     Formatter.formatFileSize(this, total),
-                                    Formatter.formatFileSize(this, speed));
+                                    Formatter.formatFileSize(this, speed),
+                                    estMinsLeft, estSecsLeft);
         note.setText(text);
     }
 
