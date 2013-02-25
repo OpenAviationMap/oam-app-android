@@ -99,7 +99,6 @@ public class DownloadMapTask extends GroundyTask {
         URL                 url  = new URL(FILELIST_URL);
         URLConnection       conn = url.openConnection();
         conn.setConnectTimeout(SOCKET_TIMEOUT);
-        conn.setReadTimeout(SOCKET_TIMEOUT);
         InputStream         is   = conn.getInputStream();
         BufferedInputStream bis  = new BufferedInputStream(is);
         ByteArrayBuffer     bab  = new ByteArrayBuffer(64);
@@ -145,7 +144,6 @@ public class DownloadMapTask extends GroundyTask {
         for (URL url : urls) {
             URLConnection c = url.openConnection();
             c.setConnectTimeout(SOCKET_TIMEOUT);
-            c.setReadTimeout(SOCKET_TIMEOUT);
             estTotal += c.getContentLength();
         }
 
@@ -153,8 +151,6 @@ public class DownloadMapTask extends GroundyTask {
         Bundle resultData = new Bundle();
         for (URL url : urls) {
             URLConnection       conn    = url.openConnection();
-            conn.setConnectTimeout(SOCKET_TIMEOUT);
-            conn.setReadTimeout(SOCKET_TIMEOUT);
             InputStream         is      = conn.getInputStream();
             BufferedInputStream bis     = new BufferedInputStream(is);
             byte[]              buf     = new byte[256 * 1024];
