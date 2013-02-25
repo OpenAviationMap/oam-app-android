@@ -158,7 +158,6 @@ public class HomeActivity extends Activity {
         mLocationOverlay.enableMyLocation();
 
 
-
         // set up in-app donations
         Resources res = getResources();
         String licenseKey = res.getString(R.string.google_play_license_key);
@@ -211,7 +210,9 @@ public class HomeActivity extends Activity {
         if (prefs.getBoolean(KEY_WAKE_LOCK, false)) {
             PowerManager pm = (PowerManager)
                                         getSystemService(Context.POWER_SERVICE);
-            wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
+            wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
+                                    | PowerManager.ACQUIRE_CAUSES_WAKEUP
+                                    | PowerManager.ON_AFTER_RELEASE,
                                       getText(R.string.app_name).toString());
             wakeLock.acquire();
         } else {
@@ -219,6 +220,17 @@ public class HomeActivity extends Activity {
                 wakeLock.release();
             }
             wakeLock = null;
+        }
+
+        if (menu != null) {
+            MenuItem wakeLockMenu = menu.findItem(R.id.action_wake_lock);
+            if (wakeLock != null) {
+                wakeLockMenu.setIcon(R.drawable.wake_lock);
+                wakeLockMenu.setTitle(R.string.action_wake_unlock);
+            } else {
+                wakeLockMenu.setIcon(R.drawable.wake_auto);
+                wakeLockMenu.setTitle(R.string.action_wake_lock);
+            }
         }
     }
 
@@ -240,10 +252,6 @@ public class HomeActivity extends Activity {
         edit.commit();
 
         mLocationOverlay.disableMyLocation();
-        if (wakeLock != null) {
-            wakeLock.release();
-            wakeLock = null;
-        }
     }
 
     @Override
@@ -252,6 +260,11 @@ public class HomeActivity extends Activity {
 
         mOamTileProvider.clearTileCache();
         mOsmTileProvider.clearTileCache();
+
+        if (wakeLock != null) {
+            wakeLock.release();
+            wakeLock = null;
+        }
     }
 
     @Override
@@ -349,6 +362,7 @@ public class HomeActivity extends Activity {
                                     ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 return true;
             }
+            return true;
 
         case R.id.action_wake_lock:
             if (wakeLock == null) {

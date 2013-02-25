@@ -125,15 +125,12 @@ public class DownloadMapActivity extends Activity {
         state = mapsAvailableLocally() ? State.COMPLETE
                                        : State.INCOMPLETE;
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null
+         && savedInstanceState.getParcelable(RECEIVER_KEY) instanceof
+                                                  DetachableResultReceiver) {
             updateMainProgress(0, 0, savedInstanceState.getInt(PROGRESS_KEY));
-            if (savedInstanceState.getParcelable(RECEIVER_KEY) instanceof
-                                                    DetachableResultReceiver) {
-                mDetachableReceiver =
+            mDetachableReceiver =
                                 savedInstanceState.getParcelable(RECEIVER_KEY);
-            } else {
-                mDetachableReceiver = new DetachableResultReceiver(new Handler());
-            }
             state = savedInstanceState.getParcelable(STATE_KEY);
             downloadStart = savedInstanceState.getLong(DOWNLOAD_START_KEY);
         } else {
