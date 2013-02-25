@@ -127,8 +127,13 @@ public class DownloadMapActivity extends Activity {
 
         if (savedInstanceState != null) {
             updateMainProgress(0, 0, savedInstanceState.getInt(PROGRESS_KEY));
-            mDetachableReceiver =
+            if (savedInstanceState.getParcelable(RECEIVER_KEY) instanceof
+                                                    DetachableResultReceiver) {
+                mDetachableReceiver =
                                 savedInstanceState.getParcelable(RECEIVER_KEY);
+            } else {
+                mDetachableReceiver = new DetachableResultReceiver(new Handler());
+            }
             state = savedInstanceState.getParcelable(STATE_KEY);
             downloadStart = savedInstanceState.getLong(DOWNLOAD_START_KEY);
         } else {

@@ -367,12 +367,42 @@ public class HomeActivity extends Activity {
                 item.setIcon(R.drawable.wake_auto);
                 item.setTitle(R.string.action_wake_lock);
             }
+            return true;
 
         case R.id.action_donate_0:
-            if (iabHelper != null) {
+            if (iabHelper != null && !iabHelper.isAsyncOperationInProgress()) {
                 iabHelper.launchPurchaseFlow(this, donation_skus.get(0),
                                  IAB_REQUEST_CODE, purchaseFinishedListener);
             }
+            return true;
+
+        case R.id.action_donate_1:
+            if (iabHelper != null && !iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.launchPurchaseFlow(this, donation_skus.get(1),
+                                 IAB_REQUEST_CODE, purchaseFinishedListener);
+            }
+            return true;
+
+        case R.id.action_donate_2:
+            if (iabHelper != null && !iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.launchPurchaseFlow(this, donation_skus.get(2),
+                                 IAB_REQUEST_CODE, purchaseFinishedListener);
+            }
+            return true;
+
+        case R.id.action_donate_3:
+            if (iabHelper != null && !iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.launchPurchaseFlow(this, donation_skus.get(3),
+                                 IAB_REQUEST_CODE, purchaseFinishedListener);
+            }
+            return true;
+
+        case R.id.action_donate_4:
+            if (iabHelper != null && !iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.launchPurchaseFlow(this, donation_skus.get(4),
+                                 IAB_REQUEST_CODE, purchaseFinishedListener);
+            }
+            return true;
 
         default:
             return super.onOptionsItemSelected(item);
