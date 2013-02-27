@@ -18,7 +18,9 @@
 package org.openaviationmap.android;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
@@ -27,9 +29,11 @@ import org.osmdroid.tileprovider.modules.IArchiveFile;
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
 import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
+import org.osmdroid.util.GEMFFile;
 import org.osmdroid.views.util.constants.MapViewConstants;
 
 import android.content.Context;
+import android.util.Pair;
 
 /**
  * Map tile factory that reads only local file-based maps.
@@ -45,8 +49,8 @@ public class MapTileProviderFactory implements MapViewConstants {
      * @param aContext the context
      * @param baseName the base name of the layer to provide tiles for
 	 */
-	public static MapTileProviderBase getInstance(final Context aContext,
-	                                              final String baseName) {
+	public static MapTileProviderBase
+	getInstance(final Context aContext, final String baseName) {
 
 		// list the archive files available
 		final File oamPath = aContext.getExternalFilesDir(
@@ -85,6 +89,34 @@ public class MapTileProviderFactory implements MapViewConstants {
                 tileProviders);
 
         return provider;
+	}
+
+	public static Pair<Integer, Integer>
+	getMinMaxZoomLevels(final Context aContext, final String baseName) {
+        // list the archive files available
+        final File oamPath = aContext.getExternalFilesDir(
+                                                HomeActivity.DEFAULT_OAM_DIR);
+
+        final File[] files = oamPath.listFiles();
+        int minZoom = Integer.MAX_VALUE;
+        int maxZoom = Integer.MIN_VALUE;
+        if (files != null) {
+            for (final File file : files) {
+                if (file.getName().startsWith(baseName)) {
+                    try {
+                        GEMFFile gf = new GEMFFile(file);
+                        Set<Integer> zoomLevels = gf.getZoomLevels();
+                        for (int i : zoomLevels) {
+                            minZoom = Math.min(minZoom, i);
+                            maxZoom = Math.max(maxZoom, i);
+                        }
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
+
+        return new Pair<Integer, Integer>(minZoom, maxZoom);
 	}
 
 	/**

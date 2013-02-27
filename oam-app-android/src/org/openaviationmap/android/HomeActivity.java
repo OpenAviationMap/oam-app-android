@@ -27,9 +27,11 @@ import org.openaviationmap.android.billing.Inventory;
 import org.openaviationmap.android.billing.Purchase;
 import org.openaviationmap.android.billing.SkuDetails;
 import org.osmdroid.ResourceProxy;
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MyLocationOverlay;
 import org.osmdroid.views.overlay.TilesOverlay;
@@ -45,6 +47,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -56,33 +59,39 @@ import com.euedge.openaviationmap.android.R;
 
 public class HomeActivity extends Activity {
 
-    private static String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
 
-    public static String DEFAULT_OAM_DIR = "openaviationmap";
-    public static String OSM_MAP_FILE    = "osm.gemf";
-    public static String OAM_MAP_FILE    = "oam.gemf";
+    public static final String DEFAULT_OAM_DIR = "openaviationmap";
+    public static final String OSM_MAP_FILE    = "osm_low.gemf";
+    public static final String OAM_MAP_FILE    = "oam_low.gemf";
 
-    private static int ZOOM_MIN = 0;
-    private static int ZOOM_MAX = 14;
-    private static int TILE_SIZE = 256;
+    private static final int TILE_SIZE = 256;
 
-    private static String PREFERENCES_NAME  =
+    private static final String PREFERENCES_NAME  =
                                         HomeActivity.class.getCanonicalName();
-    private static String KEY_ZOOM_LEVEL      = "zoom_level";
-    private static String KEY_SCROLL_X        = "scroll_x";
-    private static String KEY_SCROLL_Y        = "scroll_y";
-    private static String KEY_SHOW_LOCATION   = "show_location";
-    private static String KEY_FOLLOW_LOCATION = "follow_location";
-    private static String KEY_WAKE_LOCK       = "wake_lock";
+    private static final String KEY_ZOOM_LEVEL      = "zoom_level";
+    private static final String KEY_LATITUDE        = "latitude";
+    private static final String KEY_LONGITUDE       = "longitude";
+    private static final String KEY_SHOW_LOCATION   = "show_location";
+    private static final String KEY_FOLLOW_LOCATION = "follow_location";
+    private static final String KEY_MANUAL_LOCATION_LATITUDE =
+                                                    "manual_location_latitude";
+    private static final String KEY_MANUAL_LOCATION_LONGITUDE =
+                                                    "manual_location_longitude";
+    private static final String KEY_WAKE_LOCK       = "wake_lock";
 
-    private static String SKU_DONATION_0 = "donation_0";
-    private static String SKU_DONATION_1 = "donation_1";
-    private static String SKU_DONATION_2 = "donation_2";
-    private static String SKU_DONATION_3 = "donation_3";
-    private static String SKU_DONATION_4 = "donation_4";
-    private static int IAB_REQUEST_CODE  = 112111;
+    private static final int DEFAULT_LATITUDE = 47161707;
+    private static final int DEFAULT_LONGITUDE = 18951416;
+    private static final int DEFAULT_ZOOM = 0;
 
-    private static String[] SKU_DONATION_NAMES = { SKU_DONATION_0,
+    private static final String SKU_DONATION_0 = "donation_0";
+    private static final String SKU_DONATION_1 = "donation_1";
+    private static final String SKU_DONATION_2 = "donation_2";
+    private static final String SKU_DONATION_3 = "donation_3";
+    private static final String SKU_DONATION_4 = "donation_4";
+    private static final int IAB_REQUEST_CODE  = 112111;
+
+    private static final String[] SKU_DONATION_NAMES = { SKU_DONATION_0,
             SKU_DONATION_1, SKU_DONATION_2, SKU_DONATION_3, SKU_DONATION_4 };
 
     private MapView             mOsmv            = null;
@@ -93,6 +102,7 @@ public class HomeActivity extends Activity {
     private MapTileProviderBase mOamTileProvider = null;
 
     private boolean             followFellow     = false;
+    private IGeoPoint           manualLocation;
 
     private Menu                menu     = null;
     PowerManager.WakeLock       wakeLock = null;
@@ -117,6 +127,8 @@ public class HomeActivity extends Activity {
         // set up the map view
         mResourceProxy = new ResourceProxyImpl(getApplicationContext());
 
+        Pair<Integer, Integer> zoomLevels = MapTileProviderFactory.
+                                            getMinMaxZoomLevels(this,  "osm");
         mOsmTileProvider = MapTileProviderFactory.getInstance(
                                             getApplicationContext(), "osm");
 
@@ -133,17 +145,21 @@ public class HomeActivity extends Activity {
         mOsmv.setMultiTouchControls(true);
 
         // add the ground map
-        mBaseTileSource = new XYTileSource("osm", null, ZOOM_MIN, ZOOM_MAX,
-                                           TILE_SIZE, ".png");
+        mBaseTileSource = new XYTileSource("osm", null,
+                                            zoomLevels.first, zoomLevels.second,
+                                            TILE_SIZE, ".png");
 
         mOsmTileProvider.setTileSource(mBaseTileSource);
         mOsmv.setTileSource(mBaseTileSource);
 
         // add the aviation map as an overlay
+        zoomLevels = MapTileProviderFactory.getMinMaxZoomLevels(this,  "osm");
+
         mOamTileProvider = MapTileProviderFactory.getInstance(
                                             getApplicationContext(), "oam");
-        ITileSource tileSource = new XYTileSource("oam", null, ZOOM_MIN,
-                                                  ZOOM_MAX, TILE_SIZE, ".png");
+        ITileSource tileSource = new XYTileSource("oam", null,
+                                            zoomLevels.first, zoomLevels.second,
+                                            TILE_SIZE, ".png");
         mOamTileProvider.setTileSource(tileSource);
         TilesOverlay oamTilesOverlay = new TilesOverlay(mOamTileProvider,
                                                      this.getBaseContext());
@@ -190,21 +206,34 @@ public class HomeActivity extends Activity {
                         getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
 
         // zoom to the center of the map
-        mOsmv.getController().setZoom(prefs.getInt(KEY_ZOOM_LEVEL, 9));
-        mOsmv.setScrollX(prefs.getInt(KEY_SCROLL_X, 6954));
-        mOsmv.setScrollY(prefs.getInt(KEY_SCROLL_Y, -19865));
+        GeoPoint center =
+                new GeoPoint(prefs.getInt(KEY_LATITUDE, DEFAULT_LATITUDE),
+                             prefs.getInt(KEY_LONGITUDE, DEFAULT_LONGITUDE));
+        mOsmv.getController().setCenter(center);
+
+        int zoomLevel = prefs.getInt(KEY_ZOOM_LEVEL, DEFAULT_ZOOM);
+        if (zoomLevel < mOsmv.getMinZoomLevel()) {
+            zoomLevel = mOsmv.getMinZoomLevel();
+        } else if (zoomLevel > mOsmv.getMaxZoomLevel()) {
+            zoomLevel = mOsmv.getMaxZoomLevel();
+        }
+        mOsmv.getController().setZoom(zoomLevel);
 
         if (prefs.getBoolean(KEY_SHOW_LOCATION, true)) {
             mLocationOverlay.enableMyLocation();
         } else {
             mLocationOverlay.disableMyLocation();
         }
+        manualLocation = new GeoPoint(
+                prefs.getInt(KEY_MANUAL_LOCATION_LATITUDE, DEFAULT_LATITUDE),
+                prefs.getInt(KEY_MANUAL_LOCATION_LONGITUDE, DEFAULT_LONGITUDE));
         if (prefs.getBoolean(KEY_FOLLOW_LOCATION, true)) {
             followFellow = true;
             mLocationOverlay.enableFollowLocation();
         } else {
             followFellow = false;
             mLocationOverlay.disableFollowLocation();
+            mOsmv.getController().setCenter(manualLocation);
         }
 
         if (prefs.getBoolean(KEY_WAKE_LOCK, false)) {
@@ -242,12 +271,17 @@ public class HomeActivity extends Activity {
                         getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
         final SharedPreferences.Editor edit = prefs.edit();
 
-        edit.putInt(KEY_SCROLL_X, mOsmv.getScrollX());
-        edit.putInt(KEY_SCROLL_Y, mOsmv.getScrollY());
+        IGeoPoint center = mOsmv.getMapCenter();
+        edit.putInt(KEY_LATITUDE, center.getLatitudeE6());
+        edit.putInt(KEY_LONGITUDE, center.getLongitudeE6());
         edit.putInt(KEY_ZOOM_LEVEL, mOsmv.getZoomLevel());
         edit.putBoolean(KEY_SHOW_LOCATION,
                                         mLocationOverlay.isMyLocationEnabled());
         edit.putBoolean(KEY_FOLLOW_LOCATION, followFellow);
+        edit.putInt(KEY_MANUAL_LOCATION_LATITUDE,
+                                               manualLocation.getLatitudeE6());
+        edit.putInt(KEY_MANUAL_LOCATION_LONGITUDE,
+                                               manualLocation.getLongitudeE6());
         edit.putBoolean(KEY_WAKE_LOCK, wakeLock != null);
         edit.commit();
 
@@ -327,10 +361,18 @@ public class HomeActivity extends Activity {
             return true;
 
         case R.id.action_follow_location:
-            followFellow = true;
-            mLocationOverlay.enableFollowLocation();
-            item.setIcon(R.drawable.follow_location_on);
-            item.setTitle(R.string.action_follow_location_dont);
+            if (followFellow) {
+                followFellow = false;
+                mOsmv.getController().animateTo(manualLocation);
+                item.setIcon(R.drawable.follow_location_off);
+                item.setTitle(R.string.action_follow_location);
+            } else {
+                manualLocation = mOsmv.getMapCenter();
+                followFellow = true;
+                mLocationOverlay.enableFollowLocation();
+                item.setIcon(R.drawable.follow_location_on);
+                item.setTitle(R.string.action_follow_location_dont);
+            }
             return true;
 
         case R.id.action_screen_lock:
