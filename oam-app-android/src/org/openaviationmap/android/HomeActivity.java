@@ -26,6 +26,8 @@ import org.openaviationmap.android.billing.IabResult;
 import org.openaviationmap.android.billing.Inventory;
 import org.openaviationmap.android.billing.Purchase;
 import org.openaviationmap.android.billing.SkuDetails;
+import org.openaviationmap.android.mappack.MapPack;
+import org.openaviationmap.android.mappack.MapPacks;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.tileprovider.MapTileProviderBase;
@@ -35,6 +37,8 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MyLocationOverlay;
 import org.osmdroid.views.overlay.TilesOverlay;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -62,8 +66,6 @@ public class HomeActivity extends Activity {
     private static final String TAG = "MainActivity";
 
     public static final String DEFAULT_OAM_DIR = "openaviationmap";
-    public static final String OSM_MAP_FILE    = "osm_low.gemf";
-    public static final String OAM_MAP_FILE    = "oam_low.gemf";
 
     private static final int TILE_SIZE = 256;
 
@@ -495,13 +497,35 @@ public class HomeActivity extends Activity {
         return mOsmv.onTrackballEvent(event);
     }
 
+    private File getDataPath() {
+        return getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+    }
+
     public boolean mapsAvailableLocally() {
-        final File oamPath = getExternalFilesDir(DEFAULT_OAM_DIR);
+        File  oamPath = getDataPath();
+        File  packFile = new File(oamPath, MapPackActivity.MAPPACKS_FILE);
 
-        File osm_gemf = new File(oamPath, OSM_MAP_FILE);
-        File oam_gemf = new File(oamPath, OAM_MAP_FILE);
+        if (!packFile.exists()) {
+            return false;
+        }
 
-        return osm_gemf.exists() && oam_gemf.exists();
+        try {
+            Serializer serializer = new Persister();
+            MapPacks packs = serializer.read(MapPacks.class, packFile);
+            if (packs == null) {
+                return false;
+            }
+
+            for (MapPack pack : packs.getMappacks()) {
+                if (pack.isAvailableLocally(oamPath)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        return false;
     }
 
     IabHelper.QueryInventoryFinishedListener

@@ -33,6 +33,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v4.app.NotificationCompat;
 import android.text.Html;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -54,13 +55,14 @@ import com.euedge.openaviationmap.android.R;
 public class MapPackActivity extends Activity {
 
     private static final String MAPPACKS_URL =
-                                  "http://files.openaviationmap.org/oam.files";
-    private static final String MAPPACKS_FILE = "oam.files";
+                                  //"http://files.openaviationmap.org/oam.files";
+                                  "http://192.168.1.10/oam/oam.files";
+    public static final String MAPPACKS_FILE = "oam.files";
     private static final int SOCKET_TIMEOUT = 4000;
 
     // use the activity ID as its a unique number
-    private static int DOWNLOAD_NOTIFICATIONS = R.layout.activity_download;
-    private static int GROUP                  = R.layout.activity_download;
+    private static int DOWNLOAD_NOTIFICATIONS = R.layout.activity_map_pack;
+    private static int GROUP                  = R.layout.activity_map_pack;
 
     private static final String KEY_PROGRESS       = "progress";
     private static final String KEY_RECEIVER       = "receiver";
@@ -80,6 +82,7 @@ public class MapPackActivity extends Activity {
     private MapPackAdapter  packAdapter;
     private Menu            menu;
     private boolean[]       desiredStates;
+    private MapPacks        packs;
     private MapPacks        toDelete = null;
     private MapPacks        toDownload = null;
     private long            downloadStart;
@@ -119,7 +122,7 @@ public class MapPackActivity extends Activity {
             toDelete = (MapPacks) savedState.getParcelable(KEY_TO_DELETE);
             toDownload = (MapPacks) savedState.getParcelable(KEY_TO_DOWNLOAD);
             downloadStart = savedState.getLong(KEY_DOWNLOAD_START);
-            updateMainProgress(0, 0, savedState.getInt(KEY_PROGRESS));
+            updateMainProgress(0, 0, 0, savedState.getInt(KEY_PROGRESS));
             detachableReceiver = savedState.getParcelable(KEY_RECEIVER);
         } else {
             detachableReceiver = new DetachableResultReceiver(new Handler());
@@ -160,6 +163,20 @@ public class MapPackActivity extends Activity {
             GroundyManger.cancelTasks(this, GROUP);
             notificaitonMgr.cancel(DOWNLOAD_NOTIFICATIONS);
             state = State.SELECTING;
+            packAdapter.notifyDataSetChanged();
+            setupUI();
+            return true;
+
+        case R.id.action_pause:
+            GroundyManger.cancelTasks(this, GROUP);
+            notificaitonMgr.cancel(DOWNLOAD_NOTIFICATIONS);
+            state = State.PAUSED;
+            packAdapter.notifyDataSetChanged();
+            setupUI();
+            return true;
+
+        case R.id.action_resume_download:
+            startDownload();
             packAdapter.notifyDataSetChanged();
             setupUI();
             return true;
@@ -282,6 +299,18 @@ public class MapPackActivity extends Activity {
             });
             break;
 
+        case PAUSED:
+            note.setVisibility(View.VISIBLE);
+            downloadProgress.setVisibility(View.VISIBLE);
+            spinner.setVisibility(View.GONE);
+            listView.setVisibility(View.VISIBLE);
+
+            forEachCheckbox(R.id.desired_state, new CheckboxFunction() {
+                @Override
+                public void f(int idx, CheckBox cb) { cb.setEnabled(false); }
+            });
+            break;
+
         case DOWNLOADING:
             note.setVisibility(View.VISIBLE);
             downloadProgress.setVisibility(View.VISIBLE);
@@ -317,6 +346,13 @@ public class MapPackActivity extends Activity {
             cancel.setVisible(false);
             break;
 
+        case PAUSED:
+            apply.setVisible(false);
+            resume.setVisible(true);
+            pause.setVisible(false);
+            cancel.setVisible(true);
+            break;
+
         case DOWNLOADING:
             apply.setVisible(false);
             resume.setVisible(false);
@@ -326,7 +362,8 @@ public class MapPackActivity extends Activity {
         }
     }
 
-    private void updateMainProgress(long count, long total, int progress) {
+    private void
+    updateMainProgress(long count, long totalCount, long est, int progress) {
         if (downloadProgress != null) {
             downloadProgress.setIndeterminate(false);
             downloadProgress.setProgress(progress);
@@ -341,7 +378,7 @@ public class MapPackActivity extends Activity {
         if (count > 0) {
             double c = count;
             double secs = (now - downloadStart) / 1000d;
-            long estSecs = (long) (secs / (c / total));
+            long estSecs = (long) (secs / (c / (est - totalCount + c)));
             estSecsLeft = estSecs - (long) secs;
             estHoursLeft = estSecsLeft / 3600;
             estMinsLeft  = (estSecsLeft / 60) % 60;
@@ -351,7 +388,7 @@ public class MapPackActivity extends Activity {
         String text = String.format(res.getString(R.string.download_inprogress),
                                     progress,
                                     Formatter.formatFileSize(this, count),
-                                    Formatter.formatFileSize(this, total),
+                                    Formatter.formatFileSize(this, totalCount),
                                     Formatter.formatFileSize(this, speed),
                                     estHoursLeft, estMinsLeft, estSecsLeft);
         note.setText(text);
@@ -360,7 +397,8 @@ public class MapPackActivity extends Activity {
     private void
     showNotification(boolean complete,
                      long    count,
-                     long    total,
+                     long    totalCount,
+                     long    est,
                      int     progress) {
 
         if (complete) {
@@ -391,7 +429,7 @@ public class MapPackActivity extends Activity {
             if (count > 0) {
                 double c = count;
                 double secs = (now - downloadStart) / 1000d;
-                long estSecs = (long) (secs / (c / total));
+                long estSecs = (long) (secs / (c / (est - totalCount + c)));
                 estSecsLeft = estSecs - (long) secs;
                 estHoursLeft = estSecsLeft / 3600;
                 estMinsLeft  = (estSecsLeft / 60) % 60;
@@ -401,7 +439,7 @@ public class MapPackActivity extends Activity {
             String text = String.format(
                     res.getString(R.string.download_inprogress_notification),
                                   Formatter.formatFileSize(this, count),
-                                  Formatter.formatFileSize(this, total),
+                                  Formatter.formatFileSize(this, totalCount),
                                   Formatter.formatFileSize(this, speed));
             notificationBuilder.setContentText(text);
 
@@ -432,8 +470,7 @@ public class MapPackActivity extends Activity {
             try {
                 downloadMappacksFile();
                 Serializer serializer = new Persister();
-                MapPacks packs = serializer.read(MapPacks.class,
-                                                 getMappacksFile());
+                packs = serializer.read(MapPacks.class, getMappacksFile());
 
                 return packs;
 
@@ -526,25 +563,31 @@ public class MapPackActivity extends Activity {
                      Formatter.formatFileSize(this, toDelete.getSize())));
             message.append("<br/><br/>");
             for (MapPack pack : toDelete.getMappacks()) {
-                message.append("&#8226; ");
-                message.append(pack.getName());
-                message.append(" (");
-                message.append(Formatter.formatFileSize(this, pack.getSize()));
-                message.append(")<br/>");
+                message.append(String.format(
+                        res.getString(R.string.map_pack_confirm_delete_line),
+                        pack.getName(),
+                        Formatter.formatFileSize(this, pack.getSize())));
             }
         }
 
         if (toDownload != null) {
+            File path = getDataPath();
+            long size = toDownload.getSize();
+            long remaining = size - toDownload.getLocalSize(path);
+
             message.append(String.format(
-                 res.getString(R.string.confirm_download_map_packs),
-                     Formatter.formatFileSize(this, toDownload.getSize())));
+                             res.getString(R.string.confirm_download_map_packs),
+                                 Formatter.formatFileSize(this, remaining)));
             message.append("<br/><br/>");
             for (MapPack pack : toDownload.getMappacks()) {
-                message.append("&#8226; ");
-                message.append(pack.getName());
-                message.append(" (");
-                message.append(Formatter.formatFileSize(this, pack.getSize()));
-                message.append(")<br/>");
+                size = pack.getSize();
+                remaining = size - pack.getLocalSize(path);
+
+                message.append(String.format(
+                    res.getString(R.string.map_pack_confirm_download_line),
+                    pack.getName(),
+                    Formatter.formatFileSize(this, remaining),
+                    Formatter.formatFileSize(this, size)));
             }
         }
 
@@ -610,11 +653,16 @@ public class MapPackActivity extends Activity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = convertView;
+            MapPack pack = items.get(position);
 
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getSystemService(
                                               Context.LAYOUT_INFLATER_SERVICE);
                 v = vi.inflate(R.layout.map_pack_list_item, null);
+
+                v.setClickable(true);
+                v.setOnLongClickListener(listLongClickListener);
+                v.setTag(pack);
 
                 CheckBox cb = (CheckBox) v.findViewById(R.id.desired_state);
                 cb.setOnCheckedChangeListener(onCheckListener);
@@ -622,15 +670,19 @@ public class MapPackActivity extends Activity {
 
             File path = getDataPath();
 
-            MapPack pack = items.get(position);
             if (pack != null) {
                 TextView t = (TextView) v.findViewById(R.id.firstLine);
 
                 t.setText(pack.getName());
 
+                Resources res = getResources();
                 t = (TextView) v.findViewById(R.id.secondLine);
-                t.setText(Formatter.formatFileSize(MapPackActivity.this,
-                                                   pack.getSize()));
+                t.setText(
+                    String.format(res.getString(R.string.map_pack_second_line),
+                           Formatter.formatFileSize(MapPackActivity.this,
+                                                    pack.getSize()),
+                           Formatter.formatFileSize(MapPackActivity.this,
+                                                    pack.getLocalSize(path))));
 
                 CheckBox cb = (CheckBox) v.findViewById(R.id.existing_state);
                 cb.setChecked(pack.isAvailableLocally(path));
@@ -642,7 +694,8 @@ public class MapPackActivity extends Activity {
                 } else {
                     cbb.setChecked(cb.isChecked());
                 }
-                cbb.setEnabled(state != State.DOWNLOADING);
+                cbb.setEnabled(state != State.DOWNLOADING
+                            && state != State.PAUSED);
             }
 
             return v;
@@ -683,8 +736,56 @@ public class MapPackActivity extends Activity {
         }
     };
 
+    private final View.OnLongClickListener
+    listLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            Log.i(TAG, "long click!");
+
+            MapPack pack = (MapPack) v.getTag();
+            final File path = getDataPath();
+
+            // find dependencies
+            final Vector<MapPack> ps = new Vector<MapPack>();
+            long totalSize = pack.getLocalSize(path);
+            ps.add(pack);
+            for (MapPack p : packs.getMappacks()) {
+                if (p.dependsOn(pack)) {
+                    ps.add(p);
+                    totalSize += p.getLocalSize(path);
+                }
+            }
+
+            Resources res = getResources();
+            String message = String.format(
+                            res.getString(R.string.confirm_clear_map_pack),
+                            pack.getName(),
+                            Formatter.formatFileSize(MapPackActivity.this,
+                                                     totalSize));
+
+            AlertDialog.Builder bld = new AlertDialog.Builder(
+                                                        MapPackActivity.this);
+            bld.setMessage(message);
+            bld.setNegativeButton(R.string.cancel, null);
+            bld.setPositiveButton(R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        for (MapPack p : ps) {
+                            p.deleteLocalFiles(path);
+                        }
+                        packAdapter.notifyDataSetChanged();
+                    }
+            });
+
+            bld.create().show();
+
+            return false;
+        }
+    };
+
     private final DialogInterface.OnClickListener
-    onApplyDeleteDownloadListener = new DialogInterface.OnClickListener() {
+        onApplyDeleteDownloadListener = new DialogInterface.OnClickListener() {
 
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -708,33 +809,41 @@ public class MapPackActivity extends Activity {
             } break;
 
             case Groundy.STATUS_PROGRESS: {
-                long count  = resultData.getLong(DownloadMapTask.KEY_COUNT);
-                long total  = resultData.getLong(DownloadMapTask.KEY_ESTIMATED);
+                long count = resultData.getLong(DownloadMapTask.KEY_COUNT);
+                long tc = resultData.getLong(DownloadMapTask.KEY_TOTAL_COUNT);
+                long est = resultData.getLong(DownloadMapTask.KEY_ESTIMATED);
                 int progress = resultData.getInt(Groundy.KEY_PROGRESS);
 
-                showNotification(false, count, total, progress);
-                updateMainProgress(count, total, progress);
+                showNotification(false, count, tc, est, progress);
+                updateMainProgress(count, tc, est, progress);
             } break;
 
             case Groundy.STATUS_FINISHED: {
-                state = resultData.containsKey(DownloadMapTask.KEY_CANCELLED)
-                      ? State.CANCELLED
-                      : State.COMPLETE;
+                if (state != State.PAUSED) {
+                    state = resultData.containsKey(
+                                                DownloadMapTask.KEY_CANCELLED)
+                          ? State.CANCELLED
+                          : State.COMPLETE;
+
+                    desiredStates = null;
+                    downloadProgress.setIndeterminate(false);
+                    downloadProgress.setProgress(0);
+                }
 
                 if (visible) {
                     notificaitonMgr.cancel(DOWNLOAD_NOTIFICATIONS);
                 } else {
-                    long count  = resultData.getLong(DownloadMapTask.KEY_COUNT);
-                    long total  = resultData.getLong(
-                                          DownloadMapTask.KEY_ESTIMATED);
+                    long count = resultData.getLong(DownloadMapTask.KEY_COUNT);
+                    long tc = resultData.getLong(
+                                              DownloadMapTask.KEY_TOTAL_COUNT);
+                    long est = resultData.getLong(
+                                                DownloadMapTask.KEY_ESTIMATED);
                     int progress = resultData.getInt(Groundy.KEY_PROGRESS);
-                    showNotification(true, count, total, progress);
+
+                    showNotification(false, count, tc, est, progress);
                 }
-                desiredStates = null;
                 setupUI();
                 packAdapter.notifyDataSetChanged();
-                downloadProgress.setIndeterminate(false);
-                downloadProgress.setProgress(0);
             } break;
 
             default:
@@ -761,7 +870,8 @@ public class MapPackActivity extends Activity {
         INCOMPLETE(1),
         COMPLETE(2),
         DOWNLOADING(3),
-        CANCELLED(4);
+        CANCELLED(4),
+        PAUSED(5);
 
         private final int value;
 
@@ -778,13 +888,15 @@ public class MapPackActivity extends Activity {
                 case 0:
                     return SELECTING;
                 case 1:
-                    return INCOMPLETE;
+                    return PAUSED;
                 case 2:
                     return COMPLETE;
                 case 3:
                     return DOWNLOADING;
                 case 4:
                     return CANCELLED;
+                case 5:
+                    return PAUSED;
                 }
             }
 

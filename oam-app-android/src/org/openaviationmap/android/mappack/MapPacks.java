@@ -1,5 +1,6 @@
 package org.openaviationmap.android.mappack;
 
+import java.io.File;
 import java.util.List;
 import java.util.Vector;
 
@@ -18,6 +19,15 @@ public class MapPacks implements Parcelable {
         long size = 0;
         for (MapPack pack : mappacks) {
             size += pack.getSize();
+        }
+
+        return size;
+    }
+
+    public long getLocalSize(File path) {
+        long size = 0;
+        for (MapPack pack : mappacks) {
+            size += pack.getLocalSize(path);
         }
 
         return size;

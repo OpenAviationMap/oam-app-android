@@ -17,15 +17,6 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_pause_download">Pause download</string>
     <string name="action_resume_download">Resume download</string>
-    <string name="download_notification">        Press \'Start\' below to start downloading maps.
-        \n
-        \nNote: using WiFi connectivity is recommended, as a lot of data
-        will be downloaded</string>
-    <string name="download_force_notification">        Maps already available.
-        Press \'Force Start\' below to force start re-downloading maps.
-        \n
-        \nNote: using WiFi connectivity is recommended, as a lot of data
-        will be downloaded</string>
     <string name="download_status">Downloading maps&#8230;</string>
     <string name="download_starting">Starting download&#8230;</string>
     <string name="download_inprogress">Downloading maps&#8230;\n%1$d%%, %2$s of %3$s, %4$s/s %5$02d:%6$02d:%7$02d left</string>
@@ -44,6 +35,10 @@
     <string name="donation_failed">Donation attempt failed :(</string>
     <string name="confirm_delete_map_packs">Delete the following map packs, freeing %1$s</string>
     <string name="confirm_download_map_packs">Download the following map packs, a total of %1$s</string>
+    <string name="confirm_clear_map_pack">Clear map %1$s &amp; dependent map data, freeing %2$s</string>
     <string name="confirm">Confirm</string>
+    <string name="map_pack_second_line">%2$s / %1$s</string>
+    <string name="map_pack_confirm_delete_line">&#8226; %1$s (%2$s)&lt;br/></string>
+    <string name="map_pack_confirm_download_line">&#8226; %1$s (%2$s of %3$s)&lt;br/></string>
     
 </resources>

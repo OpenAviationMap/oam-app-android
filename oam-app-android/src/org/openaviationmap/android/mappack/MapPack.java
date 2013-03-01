@@ -63,6 +63,26 @@ public class MapPack implements Parcelable {
     }
 
     /**
+     * Return the amount of data that exists in local storage. This may be
+     * less than the intended size, as this may be a result of a partial
+     * download.
+     *
+     * @param path the local base path. map pack files will be looked up
+     *        relative to this path
+     * @return the size of data available locally.
+     */
+    public long getLocalSize(File path) {
+        long size = 0;
+        for (MapFile mf : mapfiles) {
+            File file = new File(path, mf.getLocalFileName());
+            size += file.length();
+        }
+
+        return size;
+    }
+
+
+    /**
      * Tell if the map pack is available locally, based on a local base
      * path.
      *

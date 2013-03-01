@@ -41,13 +41,15 @@ public class DownloadMapTask extends GroundyTask {
     public static final String KEY_MAPPACKS = "mappacks";
     public static final String KEY_ESTIMATED = "estimated";
     public static final String KEY_COUNT = "count";
+    public static final String KEY_TOTAL_COUNT = "total_count";
     public static final String KEY_CANCELLED = "cancelled";
-
-    private static final int SOCKET_TIMEOUT = 4000;
 
     private static final String TAG = "DownloadMapTask";
 
     private MapPacks packs;
+    private long count;
+    private long totalCount;
+    private long estTotal;
 
     @Override
     protected boolean doInBackground() {
@@ -77,37 +79,47 @@ public class DownloadMapTask extends GroundyTask {
                                                 HomeActivity.DEFAULT_OAM_DIR);
         oamPath.mkdirs();
 
-        long estTotal = packs.getSize();
+        estTotal = packs.getSize();
 
-        long done = 0;
+        count = 0;
+        totalCount = 0;
         for (MapPack pack : packs.getMappacks()) {
             for (MapFile file : pack.getMapfiles()) {
-                done = download(file.getUrl(), oamPath, estTotal, done);
+                download(file.getUrl(), oamPath);
             }
         }
 
-        addIntResult(Groundy.KEY_PROGRESS, (int) (done / estTotal));
+        addIntResult(Groundy.KEY_PROGRESS, (int) (totalCount / estTotal));
         addLongResult(KEY_ESTIMATED, estTotal);
-        addLongResult(KEY_COUNT, done);
+        addLongResult(KEY_COUNT, count);
+        addLongResult(KEY_TOTAL_COUNT, totalCount);
     }
 
-    private long
-    download(String urlStr, File oamPath, long estTotal, long doneTotal)
+    private void download(String urlStr, File oamPath)
                                     throws IOException, FileNotFoundException {
 
         Bundle resultData = new Bundle();
 
         URL                 url     = new URL(urlStr);
         URLConnection       conn    = url.openConnection();
-        InputStream         is      = conn.getInputStream();
-        BufferedInputStream bis     = new BufferedInputStream(is);
-        byte[]              buf     = new byte[256 * 1024];
+
         String              fileName = url.getPath();
         if (fileName.contains("/")) {
             fileName = fileName.substring(fileName.lastIndexOf("/"));
         }
         File                outFile = new File(oamPath, fileName);
-        FileOutputStream    out     = new FileOutputStream(outFile);
+        // if the file exists, continue the download
+        if (outFile.exists()) {
+            long existingSize = outFile.length();
+            totalCount += existingSize;
+            conn.setRequestProperty("Range", "bytes=" + existingSize + "-");
+        }
+        FileOutputStream    out     = new FileOutputStream(outFile, true);
+
+        InputStream         is      = conn.getInputStream();
+        BufferedInputStream bis     = new BufferedInputStream(is);
+        byte[]              buf     = new byte[256 * 1024];
+
         int                 percent = -1;
         long                nextNotification = -1;
         int                 c;
@@ -115,15 +127,17 @@ public class DownloadMapTask extends GroundyTask {
         while (!isQuitting() && (c = bis.read(buf, 0, buf.length)) != -1) {
             out.write(buf, 0, c);
 
-            doneTotal += c;
-            int newPercent = (int) (100l * doneTotal / estTotal);
+            count += c;
+            totalCount += c;
+            int newPercent = (int) (100l * totalCount / estTotal);
             long now = System.currentTimeMillis();
             if (percent < newPercent || nextNotification < now) {
                 percent = newPercent;
 
                 resultData.putInt(Groundy.KEY_PROGRESS, percent);
                 resultData.putLong(KEY_ESTIMATED, estTotal);
-                resultData.putLong(KEY_COUNT, doneTotal);
+                resultData.putLong(KEY_COUNT, count);
+                resultData.putLong(KEY_TOTAL_COUNT, totalCount);
 
                 send(Groundy.STATUS_PROGRESS, resultData);
 
@@ -132,7 +146,5 @@ public class DownloadMapTask extends GroundyTask {
         }
         out.close();
         bis.close();
-
-        return doneTotal;
     }
 }
