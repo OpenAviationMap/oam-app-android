@@ -116,7 +116,7 @@ public class HomeActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_home);
 
         File oamPath = getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
         if (!oamPath.exists()) {
@@ -199,7 +199,7 @@ public class HomeActivity extends Activity {
 
         if (!mapsAvailableLocally()) {
             startActivity(new Intent(HomeActivity.this,
-                                     DownloadMapActivity.class));
+                                     MapPackActivity.class));
         }
 
         SharedPreferences prefs =
@@ -349,7 +349,7 @@ public class HomeActivity extends Activity {
         switch (item.getItemId()) {
         case R.id.action_get_maps:
             startActivity(new Intent(HomeActivity.this,
-                                     DownloadMapActivity.class));
+                                     MapPackActivity.class));
             return true;
 
         case R.id.action_zoom_in:

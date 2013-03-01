@@ -7,7 +7,7 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp"
     android:paddingTop="0dp"
-    android:id="@+id/layout_main"
+    android:id="@+id/layout_home"
     tools:context=".HomeActivity" >
 
     <RelativeLayout

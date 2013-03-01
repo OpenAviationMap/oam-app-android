@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    
+    <TextView
+        android:id="@+id/firstLine"
+        
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        
+        android:layout_toLeftOf="@+id/existing_state"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:paddingTop="6dip"
+        
+        android:textStyle="bold"
+                
+        android:gravity="center_vertical"
+        android:text="" />
+
+    <TextView  
+        android:id="@+id/secondLine"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        
+        android:layout_toLeftOf="@+id/existing_state"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:paddingBottom="6dip"
+        android:layout_below="@+id/firstLine"
+        
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:text="" />
+
+    <CheckBox
+        android:id="@+id/existing_state"
+        
+        android:layout_width="wrap_content"
+        android:layout_height="48dip"
+        
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/desired_state"
+        
+        android:clickable="false" />
+
+    <CheckBox
+        android:id="@+id/desired_state"
+        
+        android:layout_width="wrap_content"
+        android:layout_height="48dip"
+        
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true" />
+    
+</RelativeLayout>
