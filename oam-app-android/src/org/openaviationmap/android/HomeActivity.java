@@ -17,9 +17,14 @@
  */
 package org.openaviationmap.android;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 
 import org.openaviationmap.android.billing.IabHelper;
 import org.openaviationmap.android.billing.IabResult;
@@ -46,6 +51,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -66,6 +73,7 @@ public class HomeActivity extends Activity {
     private static final String TAG = "MainActivity";
 
     public static final String DEFAULT_OAM_DIR = "openaviationmap";
+    private static final String LAST_VERSION_FILE = "last.version";
 
     private static final int TILE_SIZE = 256;
 
@@ -120,11 +128,12 @@ public class HomeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        File oamPath = getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+        File oamPath = getDataPath();
         if (!oamPath.exists()) {
             oamPath.mkdirs();
         }
 
+        migrateFromPreviousVersion();
 
         // set up the map view
         mResourceProxy = new ResourceProxyImpl(getApplicationContext());
@@ -349,9 +358,8 @@ public class HomeActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.action_get_maps:
-            startActivity(new Intent(HomeActivity.this,
-                                     MapPackActivity.class));
+        case R.id.action_manage_maps:
+            startActivity(new Intent(HomeActivity.this, MapPackActivity.class));
             return true;
 
         case R.id.action_zoom_in:
@@ -588,6 +596,63 @@ public class HomeActivity extends Activity {
             item.setVisible(true);
 
         case 0:
+        }
+    }
+
+    private void migrateFromPreviousVersion() {
+        try {
+            File path = getDataPath();
+            File versionFile = new File(path, LAST_VERSION_FILE);
+            int lastVersion = 0;
+            if (versionFile.exists()) {
+                BufferedReader br = new BufferedReader(
+                                                new FileReader(versionFile));
+                String str = br.readLine();
+                br.close();
+
+                try {
+                    lastVersion = Integer.parseInt(str);
+                } catch (NumberFormatException e) {
+                }
+            }
+
+            switch (lastVersion) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7: {
+                // handle changes from version 7 to 8 here
+                Vector<File> files = new Vector<File>();
+
+                files.add(new File(path, "android.files"));
+                files.add(new File(path, "osm.gemf"));
+                files.add(new File(path, "osm.gemf-1"));
+                files.add(new File(path, "oam.gemf"));
+
+                for (File f : files) {
+                    if (f.exists()) {
+                        f.delete();
+                    }
+                }
+            };
+
+            default:
+            }
+
+            PackageInfo pi = getPackageManager().
+                    getPackageInfo("com.euedge.openaviationmap.android", 0);
+
+            // save the current version
+            FileWriter fw = new FileWriter(versionFile);
+            fw.write(Integer.toString(pi.versionCode));
+            fw.close();
+
+        } catch (IOException e) {
+        } catch (NameNotFoundException e) {
         }
     }
 

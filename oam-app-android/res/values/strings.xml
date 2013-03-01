@@ -3,7 +3,6 @@
 
     <string name="app_name">Open Aviation Map</string>
     <string name="welcome">Welcome to Open Aviation Map</string>
-    <string name="action_get_maps">Get Open Aviation Maps</string>
     <string name="action_manage_maps">Manage Open Aviation Maps</string>
     <string name="action_zoom_in">Zoom In</string>
     <string name="action_zoom_out">Zoom Out</string>
