@@ -55,7 +55,7 @@ import com.euedge.openaviationmap.android.R;
 public class MapPackActivity extends Activity {
 
     private static final String MAPPACKS_URL =
-                                  "http://files.openaviationmap.org/oam.files";
+                                "http://files.openaviationmap.org/oam.files";
     public static final String MAPPACKS_FILE = "oam.files";
     private static final int SOCKET_TIMEOUT = 4000;
 
@@ -410,7 +410,7 @@ public class MapPackActivity extends Activity {
             notificationBuilder.setContentInfo("");
 
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                    new Intent(this, HomeActivity.class), 0);
+                    new Intent(this, MapPackActivity.class), 0);
             notificationBuilder.setContentIntent(contentIntent);
         } else {
             notificationBuilder.setContentTitle(
@@ -839,7 +839,7 @@ public class MapPackActivity extends Activity {
                                                 DownloadMapTask.KEY_ESTIMATED);
                     int progress = resultData.getInt(Groundy.KEY_PROGRESS);
 
-                    showNotification(false, count, tc, est, progress);
+                    showNotification(true, count, tc, est, progress);
                 }
                 setupUI();
                 packAdapter.notifyDataSetChanged();
