@@ -468,6 +468,12 @@ public class MapPackActivity extends Activity {
         protected MapPacks doInBackground(Void... voids) {
             try {
                 downloadMappacksFile();
+            } catch (IOException e) {
+                // ok, couldn't download, but we still might have a file
+                // locally
+            }
+
+            try {
                 Serializer serializer = new Persister();
                 packs = serializer.read(MapPacks.class, getMappacksFile());
 
@@ -485,7 +491,9 @@ public class MapPackActivity extends Activity {
             setupUI();
 
             packAdapter.clear();
-            packAdapter.addAll(packs.getMappacks());
+            if (packs != null) {
+                packAdapter.addAll(packs.getMappacks());
+            }
             packAdapter.notifyDataSetChanged();
         }
     }
