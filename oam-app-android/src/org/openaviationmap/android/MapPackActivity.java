@@ -120,7 +120,13 @@ public class MapPackActivity extends SherlockActivity {
             toDownload = (MapPacks) savedState.getParcelable(KEY_TO_DOWNLOAD);
             downloadStart = savedState.getLong(KEY_DOWNLOAD_START);
             updateMainProgress(0, 0, 0, savedState.getInt(KEY_PROGRESS));
-            detachableReceiver = savedState.getParcelable(KEY_RECEIVER);
+            if (savedState.getParcelable(KEY_RECEIVER) instanceof
+                                                DetachableResultReceiver) {
+                detachableReceiver = savedState.getParcelable(KEY_RECEIVER);
+            } else {
+                detachableReceiver = new DetachableResultReceiver(
+                                                                new Handler());
+            }
         } else {
             detachableReceiver = new DetachableResultReceiver(new Handler());
         }
