@@ -45,7 +45,6 @@ import org.osmdroid.views.overlay.TilesOverlay;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -59,16 +58,17 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Pair;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.euedge.openaviationmap.android.R;
 
-public class HomeActivity extends Activity {
+public class HomeActivity extends SherlockActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -184,11 +184,10 @@ public class HomeActivity extends Activity {
         mOsmv.getOverlays().add(mLocationOverlay);
         mLocationOverlay.enableMyLocation();
 
-
         // set up in-app donations
         Resources res = getResources();
         String licenseKey = res.getString(R.string.google_play_license_key);
-        if (!licenseKey.isEmpty()) {
+        if (licenseKey != null && licenseKey.length() > 0) {
             iabHelper = new IabHelper(this, licenseKey);
 
             iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
@@ -217,11 +216,6 @@ public class HomeActivity extends Activity {
                         getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
 
         // zoom to the center of the map
-        GeoPoint center =
-                new GeoPoint(prefs.getInt(KEY_LATITUDE, DEFAULT_LATITUDE),
-                             prefs.getInt(KEY_LONGITUDE, DEFAULT_LONGITUDE));
-        mOsmv.getController().setCenter(center);
-
         int zoomLevel = prefs.getInt(KEY_ZOOM_LEVEL, DEFAULT_ZOOM);
         if (zoomLevel < mOsmv.getMinZoomLevel()) {
             zoomLevel = mOsmv.getMinZoomLevel();
@@ -229,6 +223,12 @@ public class HomeActivity extends Activity {
             zoomLevel = mOsmv.getMaxZoomLevel();
         }
         mOsmv.getController().setZoom(zoomLevel);
+
+        GeoPoint center =
+                new GeoPoint(prefs.getInt(KEY_LATITUDE, DEFAULT_LATITUDE),
+                             prefs.getInt(KEY_LONGITUDE, DEFAULT_LONGITUDE));
+
+        mOsmv.getController().setCenter(center);
 
         if (prefs.getBoolean(KEY_SHOW_LOCATION, true)) {
             mLocationOverlay.enableMyLocation();
@@ -244,7 +244,6 @@ public class HomeActivity extends Activity {
         } else {
             followFellow = false;
             mLocationOverlay.disableFollowLocation();
-            mOsmv.getController().setCenter(manualLocation);
         }
 
         if (prefs.getBoolean(KEY_WAKE_LOCK, false)) {
@@ -283,6 +282,7 @@ public class HomeActivity extends Activity {
         final SharedPreferences.Editor edit = prefs.edit();
 
         IGeoPoint center = mOsmv.getMapCenter();
+
         edit.putInt(KEY_LATITUDE, center.getLatitudeE6());
         edit.putInt(KEY_LONGITUDE, center.getLongitudeE6());
         edit.putInt(KEY_ZOOM_LEVEL, mOsmv.getZoomLevel());
@@ -315,7 +315,7 @@ public class HomeActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        getSupportMenuInflater().inflate(R.menu.main, menu);
         this.menu = menu;
 
         MenuItem locMenu = menu.findItem(R.id.action_follow_location);

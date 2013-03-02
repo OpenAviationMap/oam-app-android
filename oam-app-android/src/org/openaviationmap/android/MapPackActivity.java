@@ -15,8 +15,6 @@ import org.openaviationmap.android.mappack.MapPacks;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -35,8 +33,6 @@ import android.text.Html;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -47,15 +43,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.codeslap.groundy.DetachableResultReceiver;
 import com.codeslap.groundy.Groundy;
 import com.codeslap.groundy.GroundyManger;
 import com.euedge.openaviationmap.android.R;
 
-public class MapPackActivity extends Activity {
+public class MapPackActivity extends SherlockActivity {
 
-    private static final String MAPPACKS_URL =
-                                "http://files.openaviationmap.org/oam.files";
     public static final String MAPPACKS_FILE = "oam.files";
     private static final int SOCKET_TIMEOUT = 4000;
 
@@ -97,7 +95,7 @@ public class MapPackActivity extends Activity {
         super.onCreate(savedState);
         setContentView(R.layout.activity_map_pack);
 
-        ActionBar actionBar = getActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.action_manage_maps);
 
@@ -134,7 +132,7 @@ public class MapPackActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.map_pack, menu);
+        getSupportMenuInflater().inflate(R.menu.map_pack, menu);
         this.menu = menu;
 
         return true;
@@ -492,7 +490,9 @@ public class MapPackActivity extends Activity {
 
             packAdapter.clear();
             if (packs != null) {
-                packAdapter.addAll(packs.getMappacks());
+                for (MapPack p : packs.getMappacks()) {
+                    packAdapter.add(p);
+                }
             }
             packAdapter.notifyDataSetChanged();
         }
@@ -500,9 +500,10 @@ public class MapPackActivity extends Activity {
 
     private synchronized void downloadMappacksFile() throws IOException {
         File mappacksFile = getMappacksFile();
+        Resources res = getResources();
 
-        URL                 url = new URL(MAPPACKS_URL);
-        HttpURLConnection   conn = (HttpURLConnection) url.openConnection();
+        URL               url = new URL(res.getString(R.string.map_packs_url));
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         if (mappacksFile.exists()) {
             // only download if newer than what we have
             conn.setIfModifiedSince(mappacksFile.lastModified());
@@ -696,7 +697,7 @@ public class MapPackActivity extends Activity {
                 cb.setEnabled(false);
                 CheckBox cbb = (CheckBox) v.findViewById(R.id.desired_state);
                 cbb.setTag(pack);
-                if (desiredStates != null) {
+                if (desiredStates != null && position < desiredStates.length) {
                     cbb.setChecked(desiredStates[position]);
                 } else {
                     cbb.setChecked(cb.isChecked());

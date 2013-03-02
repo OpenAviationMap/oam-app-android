@@ -55,7 +55,6 @@ public class DownloadMapTask extends GroundyTask {
     protected boolean doInBackground() {
         packs = (MapPacks) getParameters().getParcelable(KEY_MAPPACKS);
 
-        // first, download the torrent file
         try {
             downloadPacks();
 
@@ -85,7 +84,7 @@ public class DownloadMapTask extends GroundyTask {
         totalCount = 0;
         for (MapPack pack : packs.getMappacks()) {
             for (MapFile file : pack.getMapfiles()) {
-                download(file.getUrl(), oamPath);
+                download(file.getUrl(), oamPath, file.getLocalFileName());
             }
         }
 
@@ -95,56 +94,76 @@ public class DownloadMapTask extends GroundyTask {
         addLongResult(KEY_TOTAL_COUNT, totalCount);
     }
 
-    private void download(String urlStr, File oamPath)
+    private void download(String urlStr, File oamPath, String localFileName)
                                     throws IOException, FileNotFoundException {
 
         Bundle resultData = new Bundle();
 
-        URL                 url     = new URL(urlStr);
-        URLConnection       conn    = url.openConnection();
-
-        String              fileName = url.getPath();
-        if (fileName.contains("/")) {
-            fileName = fileName.substring(fileName.lastIndexOf("/"));
-        }
-        File                outFile = new File(oamPath, fileName);
+        File                outFile = new File(oamPath, localFileName);
         // if the file exists, continue the download
         if (outFile.exists()) {
             long existingSize = outFile.length();
             totalCount += existingSize;
-            conn.setRequestProperty("Range", "bytes=" + existingSize + "-");
         }
-        FileOutputStream    out     = new FileOutputStream(outFile, true);
 
-        InputStream         is      = conn.getInputStream();
-        BufferedInputStream bis     = new BufferedInputStream(is);
-        byte[]              buf     = new byte[256 * 1024];
+        while (!isQuitting()) {
+            FileOutputStream    out = null;
+            BufferedInputStream bis = null;
+            try {
+                URL                 url     = new URL(urlStr);
+                URLConnection       conn    = url.openConnection();
 
-        int                 percent = -1;
-        long                nextNotification = -1;
-        int                 c;
+                // if the file exists, continue the download
+                if (outFile.exists()) {
+                    long existingSize = outFile.length();
+                    conn.setRequestProperty("Range", "bytes=" + existingSize + "-");
+                }
+                out     = new FileOutputStream(outFile, true);
 
-        while (!isQuitting() && (c = bis.read(buf, 0, buf.length)) != -1) {
-            out.write(buf, 0, c);
+                InputStream         is      = conn.getInputStream();
+                bis     = new BufferedInputStream(is);
+                byte[]              buf     = new byte[256 * 1024];
 
-            count += c;
-            totalCount += c;
-            int newPercent = (int) (100l * totalCount / estTotal);
-            long now = System.currentTimeMillis();
-            if (percent < newPercent || nextNotification < now) {
-                percent = newPercent;
+                int                 percent = -1;
+                long                nextNotification = -1;
+                int                 c;
 
-                resultData.putInt(Groundy.KEY_PROGRESS, percent);
-                resultData.putLong(KEY_ESTIMATED, estTotal);
-                resultData.putLong(KEY_COUNT, count);
-                resultData.putLong(KEY_TOTAL_COUNT, totalCount);
+                while (!isQuitting()
+                   && (c = bis.read(buf, 0, buf.length)) != -1) {
+                    out.write(buf, 0, c);
 
-                send(Groundy.STATUS_PROGRESS, resultData);
+                    count += c;
+                    totalCount += c;
+                    int newPercent = (int) (100l * totalCount / estTotal);
+                    long now = System.currentTimeMillis();
+                    if (percent < newPercent || nextNotification < now) {
+                        percent = newPercent;
 
-                nextNotification = now + 1000;
+                        resultData.putInt(Groundy.KEY_PROGRESS, percent);
+                        resultData.putLong(KEY_ESTIMATED, estTotal);
+                        resultData.putLong(KEY_COUNT, count);
+                        resultData.putLong(KEY_TOTAL_COUNT, totalCount);
+
+                        send(Groundy.STATUS_PROGRESS, resultData);
+
+                        nextNotification = now + 1000;
+                    }
+                }
+
+                // we only get here if the whole file was finished, or
+                // we need to quit. on IO Exceptions, we try again
+                break;
+            } catch (IOException e) {
+                // no need to respond, just re-try via the whole loop
+            } finally {
+                if (out != null) {
+                    out.close();
+                }
+                if (bis != null) {
+                    bis.close();
+                }
             }
+
         }
-        out.close();
-        bis.close();
     }
 }
