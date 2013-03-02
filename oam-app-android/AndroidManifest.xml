@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.euedge.openaviationmap.android"
-    android:versionCode="11"
-    android:versionName="1.0beta.11" >
+    android:versionCode="12"
+    android:versionName="1.0beta.12" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -43,8 +43,8 @@
         </activity>
         <activity
             android:name="org.openaviationmap.android.MapPackActivity"
-            android:launchMode="singleInstance"
-            android:label="@string/action_manage_maps" >
+            android:label="@string/action_manage_maps"
+            android:launchMode="singleInstance" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.openaviationmap.android.HomeActivity" />
@@ -52,6 +52,13 @@
 
         <service android:name="com.codeslap.groundy.GroundyService" />
 
+        <activity
+            android:name="org.openaviationmap.android.AboutActivity"
+            android:label="@string/title_activity_about" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.openaviationmap.android.HomeActivity" />
+        </activity>
     </application>
 
 </manifest>

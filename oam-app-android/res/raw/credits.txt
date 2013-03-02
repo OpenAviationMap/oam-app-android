@@ -1,0 +1,3 @@
+Aviation map data based on eAIP publications published by respective national authorities.
+<br/><br/>
+Ground map data based on Open Street Map, http://www.openstreetmap.org/ 

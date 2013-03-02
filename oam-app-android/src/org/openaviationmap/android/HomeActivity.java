@@ -470,6 +470,10 @@ public class HomeActivity extends SherlockActivity {
             }
             return true;
 
+        case R.id.action_about:
+            startActivity(new Intent(HomeActivity.this, AboutActivity.class));
+            return true;
+
         default:
             return super.onOptionsItemSelected(item);
         }
