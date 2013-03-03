@@ -31,7 +31,6 @@ import android.support.v4.app.NavUtils;
 import android.support.v4.app.NotificationCompat;
 import android.text.Html;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -675,6 +674,7 @@ public class MapPackActivity extends SherlockActivity {
                 v = vi.inflate(R.layout.map_pack_list_item, null);
 
                 v.setClickable(true);
+                v.setOnClickListener(listClickListener);
                 v.setOnLongClickListener(listLongClickListener);
                 v.setTag(pack);
 
@@ -750,12 +750,19 @@ public class MapPackActivity extends SherlockActivity {
         }
     };
 
+    private final View.OnClickListener
+    listClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            CheckBox cb = (CheckBox) v.findViewById(R.id.desired_state);
+            cb.toggle();
+        }
+    };
+
     private final View.OnLongClickListener
     listLongClickListener = new View.OnLongClickListener() {
         @Override
         public boolean onLongClick(View v) {
-            Log.i(TAG, "long click!");
-
             MapPack pack = (MapPack) v.getTag();
             final File path = getDataPath();
 

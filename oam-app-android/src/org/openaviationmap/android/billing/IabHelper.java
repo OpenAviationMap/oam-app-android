@@ -94,6 +94,7 @@ public class IabHelper {
     // Connection to the service
     IInAppBillingService mService;
     ServiceConnection mServiceConn;
+    boolean serviceBound;
 
     // The request code used to launch purchase flow
     int mRequestCode;
@@ -258,7 +259,7 @@ public class IabHelper {
         Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
         if (!mContext.getPackageManager().queryIntentServices(serviceIntent, 0).isEmpty()) {
             // service available to handle that Intent
-            mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+            serviceBound = mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
         }
         else {
             // no service available to handle that Intent
@@ -281,7 +282,9 @@ public class IabHelper {
         mSetupDone = false;
         if (mServiceConn != null) {
             logDebug("Unbinding from service.");
-            if (mContext != null) mContext.unbindService(mServiceConn);
+            if (mContext != null && serviceBound) {
+                mContext.unbindService(mServiceConn);
+            }
             mServiceConn = null;
             mService = null;
             mPurchaseListener = null;

@@ -22,7 +22,6 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.text.Html;
-import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -223,8 +222,6 @@ public class AboutActivity extends SherlockActivity {
 
             int code = result.getResponse();
 
-            Log.i(TAG, "purchase finished, code: " + code);
-
             if (code != IabHelper.BILLING_RESPONSE_RESULT_OK
              && code != IabHelper.BILLING_RESPONSE_RESULT_USER_CANCELED
              && code != IabHelper.IABHELPER_USER_CANCELLED) {
@@ -251,8 +248,6 @@ public class AboutActivity extends SherlockActivity {
             AlertDialog.Builder bld = new AlertDialog.Builder(
                                                         AboutActivity.this);
             bld.setNeutralButton(R.string.ok, null);
-
-            Log.i(TAG, "consume finished, code: " + result.getResponse());
 
             if (result.isSuccess()) {
                 bld.setMessage(R.string.donation_successful);
