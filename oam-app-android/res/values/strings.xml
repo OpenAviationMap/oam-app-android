@@ -32,6 +32,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="donate">Donate %1$s!</string>
+    <string name="consider_donate">If you find this application useful, do consider giving a donation, to ensure the project keeps on going.</string>
     <string name="donation_successful">Thank you for your worthy donation!</string>
     <string name="donation_failed">Donation attempt failed :(</string>
     <string name="confirm_delete_map_packs">Delete the following map packs, freeing %1$s</string>

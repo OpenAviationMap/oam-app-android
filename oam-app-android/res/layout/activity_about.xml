@@ -32,8 +32,29 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/info_text"
         android:paddingTop="16dip"
-        android:layout_gravity="center|bottom"
+        android:layout_gravity="center_horizontal"
         android:autoLink="all"
         android:textIsSelectable="true" />
 
+    <TextView
+        android:id="@+id/donate_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/credits_text"
+        android:paddingTop="16dip"
+        android:layout_gravity="center_horizontal"
+        android:autoLink="all"
+        android:textIsSelectable="true"
+        android:text="@string/consider_donate"
+        android:visibility="gone" />
+    
+    <ListView
+        android:id="@+id/donate_list_view"
+        android:paddingTop="16dip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/donate_text"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
+    
 </RelativeLayout>

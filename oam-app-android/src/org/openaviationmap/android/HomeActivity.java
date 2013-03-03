@@ -101,7 +101,7 @@ public class HomeActivity extends SherlockActivity {
     private static final String SKU_DONATION_4 = "donation_4";
     private static final int IAB_REQUEST_CODE  = 112111;
 
-    private static final String[] SKU_DONATION_NAMES = { SKU_DONATION_0,
+    public static final String[] SKU_DONATION_NAMES = { SKU_DONATION_0,
             SKU_DONATION_1, SKU_DONATION_2, SKU_DONATION_3, SKU_DONATION_4 };
 
     private MapView             mOsmv            = null;
@@ -183,6 +183,11 @@ public class HomeActivity extends SherlockActivity {
 
         mOsmv.getOverlays().add(mLocationOverlay);
         mLocationOverlay.enableMyLocation();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
 
         // set up in-app donations
         Resources res = getResources();
@@ -309,6 +314,10 @@ public class HomeActivity extends SherlockActivity {
         if (wakeLock != null) {
             wakeLock.release();
             wakeLock = null;
+        }
+
+        if (iabHelper != null) {
+            iabHelper.dispose();
         }
     }
 
@@ -540,6 +549,17 @@ public class HomeActivity extends SherlockActivity {
         return false;
     }
 
+    @Override
+    protected void onActivityResult(int     requestCode,
+                                    int     resultCode,
+                                    Intent  data) {
+        if (requestCode == IAB_REQUEST_CODE) {
+            iabHelper.handleActivityResult(requestCode, resultCode, data);
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     IabHelper.QueryInventoryFinishedListener
     gotInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
         @Override
@@ -664,7 +684,12 @@ public class HomeActivity extends SherlockActivity {
     purchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
         @Override
         public void onIabPurchaseFinished(IabResult result, Purchase purchase) {
-            if (result.isFailure()) {
+            int code = result.getResponse();
+
+            if (code != IabHelper.BILLING_RESPONSE_RESULT_OK
+             && code != IabHelper.BILLING_RESPONSE_RESULT_USER_CANCELED
+             && code != IabHelper.IABHELPER_USER_CANCELLED) {
+
                 AlertDialog.Builder bld = new AlertDialog.Builder(
                                                             HomeActivity.this);
                 bld.setMessage(R.string.donation_failed);
@@ -673,7 +698,9 @@ public class HomeActivity extends SherlockActivity {
                 return;
             }
 
-            iabHelper.consumeAsync(purchase, consumeFinishedListener);
+            if (result.isSuccess()) {
+                iabHelper.consumeAsync(purchase, consumeFinishedListener);
+            }
         }
     };
 
