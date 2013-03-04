@@ -568,6 +568,9 @@ public class HomeActivity extends SherlockActivity {
                 return;
             }
 
+            donation_skus.clear();
+            donation_prices.clear();
+
             for (String sku : SKU_DONATION_NAMES) {
                 if (inventory.hasDetails(sku)) {
                     SkuDetails d = inventory.getSkuDetails(sku);
