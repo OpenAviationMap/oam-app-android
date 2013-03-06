@@ -104,7 +104,11 @@ public class AboutActivity extends SherlockActivity {
         super.onStop();
 
         if (iabHelper != null) {
-            iabHelper.dispose();
+            if (iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.disposeAfterAsyncDone(true);
+            } else {
+                iabHelper.dispose();
+            }
         }
     }
 

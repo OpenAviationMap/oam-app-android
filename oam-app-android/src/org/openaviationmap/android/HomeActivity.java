@@ -202,6 +202,8 @@ public class HomeActivity extends SherlockActivity {
                         iabHelper.queryInventoryAsync(true,
                                              Arrays.asList(SKU_DONATION_NAMES),
                                              gotInventoryListener);
+
+
                     }
                 }
             });
@@ -317,7 +319,11 @@ public class HomeActivity extends SherlockActivity {
         }
 
         if (iabHelper != null) {
-            iabHelper.dispose();
+            if (iabHelper.isAsyncOperationInProgress()) {
+                iabHelper.disposeAfterAsyncDone(true);
+            } else {
+                iabHelper.dispose();
+            }
         }
     }
 

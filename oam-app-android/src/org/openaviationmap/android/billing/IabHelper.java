@@ -88,6 +88,11 @@ public class IabHelper {
     // if mAsyncInProgress == true, what asynchronous operation is in progress?
     String mAsyncOperation = "";
 
+    // flag to signal: dispose after running async process is done
+    // this is set when a dispose() would have been called, but that
+    // would have ruined an async process
+    boolean mDisposeAfterAsyncDone = false;
+
     // Context we were passed during initialization
     Context mContext;
 
@@ -793,6 +798,10 @@ public class IabHelper {
         }
     }
 
+    public void disposeAfterAsyncDone(boolean dispose) {
+        mDisposeAfterAsyncDone = dispose;
+    }
+
     void flagStartAsync(String operation) {
         if (mAsyncInProgress) throw new IllegalStateException("Can't start async operation (" +
                 operation + ") because another async operation(" + mAsyncOperation + ") is in progress.");
@@ -804,6 +813,9 @@ public class IabHelper {
     void flagEndAsync() {
         logDebug("Ending async operation: " + mAsyncOperation);
         mAsyncOperation = "";
+        if (mDisposeAfterAsyncDone) {
+            dispose();
+        }
         mAsyncInProgress = false;
     }
 
