@@ -1,0 +1,3 @@
+﻿A légtér információk a nemzeti légügyi hatóságok hivatalos eAIP publikációin alapulnak.
+<br/><br/>
+A felszíni térképek az Open Street Map térképek felhasználásával készültek - http://www.openstreetmap.org/ 

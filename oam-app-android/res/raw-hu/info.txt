@@ -1,0 +1,6 @@
+﻿<h3>Open Aviation Map</h3>
+Repülős térképalkalmazás - Magyarország légi navigációs térképe.
+<br/>
+%1$s verzió
+<br/>
+<b>http://www.openaviationmap.org/</b>

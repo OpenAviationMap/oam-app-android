@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Open Aviation Map</string>
+    <string name="welcome">Köszönjük, hogy letöltötted az alkalmazást!</string>
+    <string name="about">Az alkalmazásról</string>
+    <string name="action_about">Mi ez?</string>
+    <string name="action_manage_maps">Térképek kezelése</string>
+    <string name="action_zoom_in">BeZoom</string>
+    <string name="action_zoom_out">KiZoom</string>
+    <string name="action_follow_location">Pozíciókövetés Be</string>
+    <string name="action_follow_location_dont">Pozíciókövetés Ki</string>
+    <string name="action_screen_lock">Képernyő rögzítés Be</string>
+    <string name="action_screen_unlock">Képernyő rögzítés Ki</string>
+    <string name="action_wake_lock">Alvó üzemmód Ki</string>
+    <string name="action_wake_unlock">Alvó üzemmód Be</string>
+    <string name="action_apply">Alkalmaz</string>
+    <string name="action_cancel">Mégse</string>
+    <string name="action_pause_download">Letöltés megszakítása</string>
+    <string name="action_resume_download">Letöltése folytatása</string>
+    <string name="download_status">Térkép letöltése&#8230;</string>
+    <string name="download_starting">Letöltés indítása&#8230;</string>
+    <string name="download_inprogress">Térkép letöltése&#8230;\n%1$d%%, %2$s of %3$s, %4$s/s %5$02d:%6$02d:%7$02d van hátra</string>
+    <string name="download_inprogress_label">Térkép letöltése&#8230;</string>
+    <string name="download_inprogress_notification">%1$s of %2$s, %3$s/s</string>
+    <string name="download_inprogress_percent">%1$d%% %2$02d:%3$02d:%4$02d</string>
+    <string name="download_force_start">Térkép ismételt letöltése</string>
+    <string name="download_complete">Éljen, a letöltés sikerült!</string>
+    <string name="download_error">A letöltés sikertelen:(</string>
+    <string name="download_start">Letöltés</string>
+    <string name="download_cancel">Mégse</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Mégse</string>
+    <string name="donate">%1$s összeggel támogatom a projektet!</string>
+    <string name="consider_donate">Ha hasznosnak találod az alkalmazást, kérjük, adománnyal is támogasd a projektet!</string>
+    <string name="donation_successful">Köszönjük a támogatást!</string>
+    <string name="donation_failed">A támogatás elküldése nem sikerült :(</string>
+    <string name="confirm_delete_map_packs">Kijelölt térképek törlése - felszabadul: %1$s</string>
+    <string name="confirm_download_map_packs">Kijelölt %1$s-nyi térkép letöltése</string>
+    <string name="confirm_clear_map_pack">%1$s &amp; térkép és kapcsolódó térképek törlése - felszabadul: %2$s</string>
+    <string name="confirm">OK</string>
+    <string name="map_pack_second_line">%2$s / %1$s</string>
+    <string name="map_pack_confirm_delete_line">&#8226; %1$s (%2$s)&lt;br/></string>
+    <string name="map_pack_confirm_download_line">&#8226; %1$s (%2$s of %3$s)&lt;br/></string>
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="action_settings">Beállítások</string>
+    <string name="hello_world">Hello world!</string>
+
+</resources>
