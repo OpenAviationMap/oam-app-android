@@ -57,6 +57,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.os.StatFs;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.widget.LinearLayout;
@@ -524,8 +525,26 @@ public class HomeActivity extends SherlockActivity {
         return mOsmv.onTrackballEvent(event);
     }
 
+    public static File getDataPath(final Context ctx) {
+        File d = ctx.getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+        if (d == null) {
+            d = ctx.getFilesDir();
+        }
+
+        return d;
+    }
+
     private File getDataPath() {
-        return getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+        return getDataPath(this);
+    }
+
+    static public long getAvailableStorageSize(final Context ctx) {
+        File path = getDataPath(ctx);
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+
+        return availableBlocks * blockSize;
     }
 
     public boolean mapsAvailableLocally() {

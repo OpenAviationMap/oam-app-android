@@ -53,8 +53,7 @@ public class MapTileProviderFactory implements MapViewConstants {
 	getInstance(final Context aContext, final String baseName) {
 
 		// list the archive files available
-		final File oamPath = aContext.getExternalFilesDir(
-		                                        HomeActivity.DEFAULT_OAM_DIR);
+		final File oamPath = HomeActivity.getDataPath(aContext);
 
 		final ArrayList<IArchiveFile> archiveFiles =
 		                                          new ArrayList<IArchiveFile>();
@@ -94,8 +93,7 @@ public class MapTileProviderFactory implements MapViewConstants {
 	public static Pair<Integer, Integer>
 	getMinMaxZoomLevels(final Context aContext, final String baseName) {
         // list the archive files available
-        final File oamPath = aContext.getExternalFilesDir(
-                                                HomeActivity.DEFAULT_OAM_DIR);
+        final File oamPath = HomeActivity.getDataPath(aContext);
 
         final File[] files = oamPath.listFiles();
         int minZoom = Integer.MAX_VALUE;

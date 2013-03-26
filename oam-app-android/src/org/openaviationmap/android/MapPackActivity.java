@@ -246,7 +246,7 @@ public class MapPackActivity extends SherlockActivity {
     }
 
     private File getDataPath() {
-        return getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR);
+        return HomeActivity.getDataPath(this);
     }
 
     private File getMappacksFile() {
@@ -518,7 +518,8 @@ public class MapPackActivity extends SherlockActivity {
 
         // only download if newer than what we have
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-            getExternalFilesDir(HomeActivity.DEFAULT_OAM_DIR).mkdirs();
+            File oamPath = HomeActivity.getDataPath(this);
+            oamPath.mkdirs();
             InputStream         is   = conn.getInputStream();
             BufferedInputStream bis  = new BufferedInputStream(is);
             byte[]              buf  = new byte[1024];
@@ -570,10 +571,15 @@ public class MapPackActivity extends SherlockActivity {
         Resources res = getResources();
         StringBuffer message = new StringBuffer();
 
+        long deleteSize = 0;
+        long downloadSize = 0;
+
         if (toDelete != null) {
+            deleteSize = toDelete.getSize();
+
             message.append(String.format(
                  res.getString(R.string.confirm_delete_map_packs),
-                     Formatter.formatFileSize(this, toDelete.getSize())));
+                     Formatter.formatFileSize(this, deleteSize)));
             message.append("<br/><br/>");
             for (MapPack pack : toDelete.getMappacks()) {
                 message.append(String.format(
@@ -584,27 +590,39 @@ public class MapPackActivity extends SherlockActivity {
         }
 
         if (toDownload != null) {
+            downloadSize = toDownload.getSize();
+
             File path = getDataPath();
-            long size = toDownload.getSize();
-            long remaining = size - toDownload.getLocalSize(path);
+            long remaining = downloadSize - toDownload.getLocalSize(path);
 
             message.append(String.format(
                              res.getString(R.string.confirm_download_map_packs),
                                  Formatter.formatFileSize(this, remaining)));
             message.append("<br/><br/>");
             for (MapPack pack : toDownload.getMappacks()) {
-                size = pack.getSize();
-                remaining = size - pack.getLocalSize(path);
+                downloadSize = pack.getSize();
+                remaining = downloadSize - pack.getLocalSize(path);
 
                 message.append(String.format(
                     res.getString(R.string.map_pack_confirm_download_line),
                     pack.getName(),
                     Formatter.formatFileSize(this, remaining),
-                    Formatter.formatFileSize(this, size)));
+                    Formatter.formatFileSize(this, downloadSize)));
             }
         }
 
-        if (message.length() > 0) {
+        long neededSize = downloadSize - deleteSize;
+        // leave some free space
+        neededSize *= 1.1;
+        long available = HomeActivity.getAvailableStorageSize(this);
+
+        if (available < neededSize) {
+            AlertDialog.Builder bld = new AlertDialog.Builder(this);
+            bld.setMessage(R.string.insufficient_space);
+            bld.setPositiveButton(R.string.ok, null);
+
+            bld.create().show();
+        } else if (message.length() > 0) {
             AlertDialog.Builder bld = new AlertDialog.Builder(this);
             bld.setMessage(Html.fromHtml(message.toString()));
             bld.setNegativeButton(R.string.cancel, null);
@@ -612,7 +630,6 @@ public class MapPackActivity extends SherlockActivity {
 
             bld.create().show();
         }
-
     }
 
     private void doDelete() {

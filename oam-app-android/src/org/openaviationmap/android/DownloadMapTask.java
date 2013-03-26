@@ -74,8 +74,7 @@ public class DownloadMapTask extends GroundyTask {
     }
 
     private void downloadPacks() throws NoSuchAlgorithmException, IOException {
-        File oamPath = getContext().getExternalFilesDir(
-                                                HomeActivity.DEFAULT_OAM_DIR);
+        File oamPath = HomeActivity.getDataPath(getContext());
         oamPath.mkdirs();
 
         estTotal = packs.getSize();

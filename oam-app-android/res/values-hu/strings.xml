@@ -45,5 +45,6 @@
     <string name="title_activity_about">AboutActivity</string>
     <string name="action_settings">Beállítások</string>
     <string name="hello_world">Hello world!</string>
-
+    <string name="insufficient_space">Sajnos nincs elég tárhely a készülékén. Szabadítson fel némi helyet és próbálja újra!</string>
+    
 </resources>
